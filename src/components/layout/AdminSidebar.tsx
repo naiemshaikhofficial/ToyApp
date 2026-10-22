@@ -37,6 +37,8 @@ import {
   Music,
   CheckCircle,
   RotateCcw,
+  Percent,
+  Ticket,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -49,6 +51,7 @@ type NavSectionId =
   | 'overview'
   | 'brands'
   | 'products'
+  | 'coupons'
   | 'orders'
   | 'finance'
   | 'licenses'
@@ -61,8 +64,6 @@ interface SubMenuItem {
   label: string
   href: string
   icon: React.ElementType
-  badge?: string
-  isAction?: boolean
 }
 
 interface SectionConfig {
@@ -74,7 +75,7 @@ interface SectionConfig {
   subItems: SubMenuItem[]
 }
 
-// 100% ProducerToy domain sections - no raw Supabase DB tables
+// 100% ProducerToy domain sections - Clean, minimal, zero badge clutter
 const SECTIONS: SectionConfig[] = [
   {
     id: 'overview',
@@ -91,9 +92,9 @@ const SECTIONS: SectionConfig[] = [
     defaultHref: '/brands',
     headerTitle: 'Brand Management',
     subItems: [
-      { label: 'Brands', href: '/brands', icon: Building2, badge: '303+' },
-      { label: 'Onboard Brand', href: '/brands?action=new', icon: PlusCircle, isAction: true },
-      { label: 'Brand Verification', href: '/brands?tab=verification', icon: ShieldCheck, badge: 'Review' },
+      { label: 'Brands', href: '/brands', icon: Building2 },
+      { label: 'Onboard Brand', href: '/brands?action=new', icon: PlusCircle },
+      { label: 'Brand Verification', href: '/brands?tab=verification', icon: ShieldCheck },
     ],
   },
   {
@@ -103,10 +104,23 @@ const SECTIONS: SectionConfig[] = [
     defaultHref: '/products',
     headerTitle: 'Product Catalog',
     subItems: [
-      { label: 'All Products', href: '/products', icon: Package, badge: 'Live' },
-      { label: 'Audio Plugins', href: '/products?type=plugin', icon: Disc, badge: 'VST3/AU' },
-      { label: 'Sample Packs', href: '/products?type=sample_pack', icon: Music, badge: 'WAV' },
-      { label: 'Add Product', href: '/products?action=new', icon: PlusCircle, isAction: true },
+      { label: 'All Products', href: '/products', icon: Package },
+      { label: 'Audio Plugins', href: '/products?type=plugin', icon: Disc },
+      { label: 'Sample Packs', href: '/products?type=sample_pack', icon: Music },
+      { label: 'Add Product', href: '/products?action=new', icon: PlusCircle },
+    ],
+  },
+  {
+    id: 'coupons',
+    label: 'Offers & Discounts',
+    icon: Tag,
+    defaultHref: '/coupons',
+    headerTitle: 'Offers & Discounts',
+    subItems: [
+      { label: 'All Coupons & Deals', href: '/coupons', icon: Tag },
+      { label: 'Product Discounts', href: '/coupons?tab=discounts', icon: Percent },
+      { label: 'Coupon Codes', href: '/coupons?tab=codes', icon: Ticket },
+      { label: 'Create New Offer', href: '/coupons?action=new', icon: PlusCircle },
     ],
   },
   {
@@ -116,9 +130,9 @@ const SECTIONS: SectionConfig[] = [
     defaultHref: '/orders',
     headerTitle: 'Sales & Orders',
     subItems: [
-      { label: 'All Orders', href: '/orders', icon: Receipt, badge: 'Live' },
+      { label: 'All Orders', href: '/orders', icon: Receipt },
       { label: 'Completed Sales', href: '/orders?status=completed', icon: CheckCircle },
-      { label: 'Refunds & Issues', href: '/orders?status=refunded', icon: RotateCcw, badge: 'Manage' },
+      { label: 'Refunds & Issues', href: '/orders?status=refunded', icon: RotateCcw },
       { label: 'Invoices & Receipts', href: '/invoices', icon: FileSpreadsheet },
     ],
   },
@@ -129,7 +143,7 @@ const SECTIONS: SectionConfig[] = [
     defaultHref: '/payouts',
     headerTitle: 'Finance & Payouts',
     subItems: [
-      { label: 'Payouts', href: '/payouts', icon: Wallet, badge: 'Active' },
+      { label: 'Payouts', href: '/payouts', icon: Wallet },
       { label: 'Tax Invoices', href: '/invoices', icon: FileSpreadsheet },
       { label: 'Revenue Analytics', href: '/payouts', icon: Activity },
     ],
@@ -153,7 +167,7 @@ const SECTIONS: SectionConfig[] = [
     defaultHref: '/users',
     headerTitle: 'Customer Accounts',
     subItems: [
-      { label: 'Registered Profiles', href: '/users', icon: Users, badge: '9+' },
+      { label: 'Registered Profiles', href: '/users', icon: Users },
       { label: 'Customer Purchases', href: '/orders', icon: Receipt },
       { label: 'Data Consents', href: '/users', icon: Shield },
     ],
@@ -165,9 +179,9 @@ const SECTIONS: SectionConfig[] = [
     defaultHref: '/news',
     headerTitle: 'Editorial & News',
     subItems: [
-      { label: 'Audio News (Turso)', href: '/news', icon: Newspaper, badge: '160+' },
-      { label: 'Editorial Blogs', href: '/blogs', icon: BookOpen, badge: '12' },
-      { label: 'Draft Article', href: '/blogs?action=new', icon: PlusCircle, isAction: true },
+      { label: 'Audio News (Turso)', href: '/news', icon: Newspaper },
+      { label: 'Editorial Blogs', href: '/blogs', icon: BookOpen },
+      { label: 'Draft Article', href: '/blogs?action=new', icon: PlusCircle },
     ],
   },
   {
@@ -177,7 +191,7 @@ const SECTIONS: SectionConfig[] = [
     defaultHref: '/support',
     headerTitle: 'Support Helpdesk',
     subItems: [
-      { label: 'All Tickets', href: '/support', icon: LifeBuoy, badge: '2 Open' },
+      { label: 'All Tickets', href: '/support', icon: LifeBuoy },
       { label: 'Escalated Tickets', href: '/support?filter=escalated', icon: MessageSquare },
       { label: 'Customer Inquiries', href: '/support', icon: Users },
     ],
@@ -189,7 +203,7 @@ const SECTIONS: SectionConfig[] = [
     defaultHref: '/staff',
     headerTitle: 'Platform Settings',
     subItems: [
-      { label: 'Staff & Roles', href: '/staff', icon: Users, badge: 'Admin' },
+      { label: 'Staff & Roles', href: '/staff', icon: Users },
       { label: 'Audit Logs', href: '/staff?tab=audit', icon: Activity },
       { label: 'Platform Security', href: '/staff?tab=security', icon: Shield },
     ],
@@ -207,6 +221,7 @@ export function AdminSidebar({
     if (path === '/') return 'overview'
     if (path.startsWith('/brands')) return 'brands'
     if (path.startsWith('/products')) return 'products'
+    if (path.startsWith('/coupons')) return 'coupons'
     if (path.startsWith('/orders')) return 'orders'
     if (path.startsWith('/invoices') || path.startsWith('/payouts')) return 'finance'
     if (path.startsWith('/licenses')) return 'licenses'
@@ -478,33 +493,18 @@ export function AdminSidebar({
                   key={item.label}
                   href={item.href}
                   onClick={() => handleItemClick(item)}
-                  className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-xs transition group ${
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs transition group ${
                     isActive
                       ? 'bg-[#222222] text-white font-semibold border-l-2 border-white'
                       : 'text-zinc-400 hover:text-white hover:bg-[#1a1a1a]'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <Icon
-                      className={`w-4 h-4 shrink-0 ${
-                        isActive ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-300'
-                      }`}
-                    />
-                    <span className="truncate text-xs font-medium">{item.label}</span>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    {item.badge && (
-                      <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-[#202020] text-zinc-300 border border-[#2e2e2e]">
-                        {item.badge}
-                      </span>
-                    )}
-                    {item.isAction ? (
-                      <span className="text-[10px] font-mono text-zinc-400 uppercase font-bold">+new</span>
-                    ) : (
-                      <Globe className="w-3.5 h-3.5 text-zinc-600 group-hover:text-zinc-400" />
-                    )}
-                  </div>
+                  <Icon
+                    className={`w-4 h-4 shrink-0 ${
+                      isActive ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-300'
+                    }`}
+                  />
+                  <span className="truncate text-xs font-medium">{item.label}</span>
                 </Link>
               )
             })

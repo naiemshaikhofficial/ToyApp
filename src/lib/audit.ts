@@ -3,7 +3,7 @@ import { getAdminClient } from '@/lib/supabase/admin'
 export interface AuditLogPayload {
   staff_email: string
   action: string
-  target_type: 'product' | 'brand' | 'order' | 'payout' | 'serial_pool' | 'staff' | 'license' | 'system'
+  target_type: 'product' | 'brand' | 'order' | 'payout' | 'serial_pool' | 'staff' | 'license' | 'coupon' | 'system'
   target_id?: string
   details?: Record<string, any>
   ip_address?: string
