@@ -17,6 +17,10 @@ import {
   FileCheck2,
   ChevronLeft,
   ChevronRight,
+  Shield,
+  ShieldCheck,
+  Clock,
+  AlertCircle,
 } from 'lucide-react'
 import {
   createBrandAction,
@@ -24,6 +28,7 @@ import {
   updateBrandCommissionAction,
   getBrandsAction,
   getBrandByIdAction,
+  toggleBrandVerificationAction,
 } from '@/actions/brandActions'
 
 interface BrandsClientProps {
@@ -51,23 +56,68 @@ export function BrandsClient({ initialBrands, totalBrands }: BrandsClientProps) 
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
 
+  // Active view: 'brands' (catalog) or 'verification' (compliance pipeline)
+  const [activeTab, setActiveTab] = useState<'brands' | 'verification'>('brands')
+  const [verificationFilter, setVerificationFilter] = useState<'all' | 'pending' | 'verified'>('all')
+  const [verifyingId, setVerifyingId] = useState<string | null>(null)
+
   React.useEffect(() => {
-    const handleCheckAction = () => {
+    const handleUrlSync = () => {
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search)
+        if (params.get('tab') === 'verification') {
+          setActiveTab('verification')
+        } else {
+          setActiveTab('brands')
+        }
         if (params.get('action') === 'new') {
           setIsCreateOpen(true)
         }
       }
     }
-    handleCheckAction()
-    window.addEventListener('popstate', handleCheckAction)
+    handleUrlSync()
+    window.addEventListener('popstate', handleUrlSync)
     window.addEventListener('toy-onboard-brand', () => setIsCreateOpen(true))
     return () => {
-      window.removeEventListener('popstate', handleCheckAction)
+      window.removeEventListener('popstate', handleUrlSync)
       window.removeEventListener('toy-onboard-brand', () => setIsCreateOpen(true))
     }
   }, [])
+
+  const handleToggleVerification = async (brandId: string, currentStatus: boolean, brandName: string) => {
+    setVerifyingId(brandId)
+    const nextVerify = !currentStatus
+    try {
+      const res = await toggleBrandVerificationAction({
+        brandId,
+        verify: nextVerify,
+        staff_email: 'naiemshaikhofficial@gmail.com',
+      })
+      if (res.success) {
+        setBrands((prev) =>
+          prev.map((b) =>
+            b.id === brandId
+              ? {
+                  ...b,
+                  contract_accepted_at: nextVerify ? new Date().toISOString() : null,
+                  contract_version: nextVerify ? 'v2.4' : null,
+                }
+              : b
+          )
+        )
+        setMessage({
+          text: `Brand "${brandName}" verification ${nextVerify ? 'approved & verified!' : 'revoked.'}`,
+          type: 'success',
+        })
+      } else {
+        setMessage({ text: res.error || 'Failed to update verification', type: 'error' })
+      }
+    } catch (err: any) {
+      setMessage({ text: err.message || 'Error updating verification', type: 'error' })
+    } finally {
+      setVerifyingId(null)
+    }
+  }
 
   // Create Form State
   const [createForm, setCreateForm] = useState({
@@ -271,164 +321,356 @@ export function BrandsClient({ initialBrands, totalBrands }: BrandsClientProps) 
         </div>
       )}
 
-      {/* Control Bar: Search & Action Buttons */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <form onSubmit={handleSearchSubmit} className="flex-1 w-full max-w-md relative">
-          <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search by brand name, slug, email..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="epic-input pl-9"
-          />
-        </form>
-
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="text-xs font-mono text-zinc-400">
-            {filteredBrands.length} of {totalBrands} Brands
-          </div>
-          <button onClick={() => setIsCreateOpen(true)} className="epic-btn-primary">
-            <Plus className="w-4 h-4" />
-            <span>Onboard Brand</span>
+      {/* View Switcher Bar */}
+      <div className="flex items-center justify-between border-b border-[#242424] pb-4">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              setActiveTab('brands')
+              if (typeof window !== 'undefined') {
+                const url = new URL(window.location.href)
+                url.searchParams.delete('tab')
+                window.history.replaceState({}, '', url.toString())
+              }
+            }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+              activeTab === 'brands'
+                ? 'bg-white text-black shadow-sm'
+                : 'text-zinc-400 hover:text-white hover:bg-[#1a1a1a]'
+            }`}
+          >
+            All Brands ({totalBrands})
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab('verification')
+              if (typeof window !== 'undefined') {
+                const url = new URL(window.location.href)
+                url.searchParams.set('tab', 'verification')
+                window.history.replaceState({}, '', url.toString())
+              }
+            }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
+              activeTab === 'verification'
+                ? 'bg-white text-black shadow-sm'
+                : 'text-zinc-400 hover:text-white hover:bg-[#1a1a1a]'
+            }`}
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Brand Verification</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#202020] text-zinc-300 border border-[#2e2e2e]">
+              {brands.filter((b) => !b.contract_accepted_at).length} Pending
+            </span>
           </button>
         </div>
+
+        <button onClick={() => setIsCreateOpen(true)} className="epic-btn-primary">
+          <Plus className="w-4 h-4" />
+          <span>Onboard Brand</span>
+        </button>
       </div>
 
-      {/* Brands Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredBrands.map((brand) => {
-          const productCount = Array.isArray(brand.products) ? brand.products.length : (brand.products?.[0]?.count || 0)
-          const memberRole = brand.brand_members?.[0]?.role || 'owner'
-          const revShare = brand.brand_members?.[0]?.revenue_share_percent || 70
+      {/* VIEW 1: BRAND VERIFICATION PIPELINE */}
+      {activeTab === 'verification' ? (
+        <div className="space-y-6">
+          {/* Top Verification Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-xs">
+            <div className="p-4 rounded-xl bg-[#181818] border border-[#2a2a2a] space-y-1">
+              <span className="text-zinc-500 uppercase tracking-wider text-[10px]">Total Brands</span>
+              <div className="text-xl font-bold text-white">{totalCount}</div>
+            </div>
+            <div className="p-4 rounded-xl bg-[#181818] border border-[#2a2a2a] space-y-1">
+              <span className="text-zinc-500 uppercase tracking-wider text-[10px] flex items-center gap-1">
+                <CheckCircle className="w-3 h-3 text-white" />
+                <span>Verified & Active</span>
+              </span>
+              <div className="text-xl font-bold text-white">
+                {brands.filter((b) => b.contract_accepted_at).length}
+              </div>
+            </div>
+            <div className="p-4 rounded-xl bg-[#181818] border border-[#2a2a2a] space-y-1">
+              <span className="text-zinc-500 uppercase tracking-wider text-[10px] flex items-center gap-1">
+                <Clock className="w-3 h-3 text-zinc-400" />
+                <span>Pending Review</span>
+              </span>
+              <div className="text-xl font-bold text-white">
+                {brands.filter((b) => !b.contract_accepted_at).length}
+              </div>
+            </div>
+          </div>
 
-          return (
-            <div
-              key={brand.id}
-              onClick={() => handleSelectBrand(brand)}
-              className="epic-card p-5 cursor-pointer hover:border-zinc-500 transition group flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-lg bg-[#181818] border border-[#2a2a2a] flex items-center justify-center overflow-hidden shrink-0">
-                      {brand.logo_url ? (
-                        <img
-                          src={brand.logo_url}
-                          alt={brand.name}
-                          className="w-full h-full object-contain p-1"
-                        />
-                      ) : (
-                        <Building2 className="w-5 h-5 text-zinc-500" />
-                      )}
-                    </div>
-                    <div>
-                      <div className="text-sm font-bold text-white group-hover:text-zinc-200 flex items-center gap-1.5">
-                        {brand.name}
-                        {brand.contract_accepted_at && (
-                          <span title="Distribution Agreement Signed">
-                            <CheckCircle className="w-3.5 h-3.5 text-zinc-300" />
-                          </span>
+          {/* Verification Filters */}
+          <div className="flex items-center gap-2">
+            {(['all', 'pending', 'verified'] as const).map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setVerificationFilter(filter)}
+                className={`px-3 py-1 rounded-md text-xs font-mono capitalize transition ${
+                  verificationFilter === filter
+                    ? 'bg-white text-black font-bold'
+                    : 'bg-[#181818] text-zinc-400 hover:text-white border border-[#2a2a2a]'
+                }`}
+              >
+                {filter === 'all'
+                  ? `All (${brands.length})`
+                  : filter === 'pending'
+                  ? `Pending Review (${brands.filter((b) => !b.contract_accepted_at).length})`
+                  : `Verified (${brands.filter((b) => b.contract_accepted_at).length})`}
+              </button>
+            ))}
+          </div>
+
+          {/* Verification Cards List */}
+          <div className="space-y-3">
+            {brands
+              .filter((b) => {
+                if (verificationFilter === 'pending') return !b.contract_accepted_at
+                if (verificationFilter === 'verified') return !!b.contract_accepted_at
+                return true
+              })
+              .map((brand) => {
+                const isVerified = !!brand.contract_accepted_at
+                const isVerifying = verifyingId === brand.id
+
+                return (
+                  <div
+                    key={brand.id}
+                    className="p-5 rounded-xl bg-[#161616] border border-[#262626] flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+                  >
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className="w-12 h-12 rounded-lg bg-[#202020] border border-[#2a2a2a] flex items-center justify-center overflow-hidden shrink-0">
+                        {brand.logo_url ? (
+                          <img
+                            src={brand.logo_url}
+                            alt={brand.name}
+                            className="w-full h-full object-contain p-1"
+                          />
+                        ) : (
+                          <Building2 className="w-6 h-6 text-zinc-500" />
                         )}
                       </div>
-                      <div className="text-[11px] font-mono text-zinc-500">/{brand.slug}</div>
+
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-bold text-white truncate">{brand.name}</h3>
+                          <span
+                            className={`text-[9px] font-mono px-2 py-0.5 rounded border uppercase font-bold flex items-center gap-1 ${
+                              isVerified
+                                ? 'bg-white text-black border-white'
+                                : 'bg-[#202020] text-zinc-400 border-zinc-700'
+                            }`}
+                          >
+                            {isVerified ? (
+                              <>
+                                <CheckCircle className="w-2.5 h-2.5" />
+                                <span>VERIFIED</span>
+                              </>
+                            ) : (
+                              <>
+                                <Clock className="w-2.5 h-2.5" />
+                                <span>PENDING</span>
+                              </>
+                            )}
+                          </span>
+                        </div>
+
+                        <div className="text-xs text-zinc-400 mt-1 flex flex-wrap items-center gap-3 font-mono">
+                          <span>/{brand.slug}</span>
+                          <span>•</span>
+                          <span>
+                            {isVerified
+                              ? `Terms Signed: ${new Date(brand.contract_accepted_at).toLocaleDateString()}`
+                              : 'Awaiting Contract Signature'}
+                          </span>
+                          <span>•</span>
+                          <span>Terms: {brand.contract_version || 'v2.4'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2.5 shrink-0 self-end md:self-center">
+                      <button
+                        onClick={() => handleSelectBrand(brand)}
+                        className="px-3 py-1.5 rounded-lg border border-[#333333] hover:bg-[#202020] text-xs text-zinc-300 hover:text-white transition"
+                      >
+                        Review Brand
+                      </button>
+
+                      <button
+                        onClick={() => handleToggleVerification(brand.id, isVerified, brand.name)}
+                        disabled={isVerifying}
+                        className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50 ${
+                          isVerified
+                            ? 'bg-[#242424] text-zinc-300 hover:text-white border border-[#333]'
+                            : 'bg-white text-black hover:bg-zinc-200'
+                        }`}
+                      >
+                        {isVerifying ? 'Updating...' : isVerified ? 'Revoke Status' : 'Verify Brand'}
+                      </button>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300">
-                    {revShare}% Share
-                  </span>
-                </div>
+                )
+              })}
+          </div>
+        </div>
+      ) : (
+        /* VIEW 2: ALL BRANDS CATALOG GRID */
+        <div className="space-y-6">
+          {/* Search Bar */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <form onSubmit={handleSearchSubmit} className="flex-1 w-full max-w-md relative">
+              <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search by brand name, slug, email..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="epic-input pl-9"
+              />
+            </form>
 
-                {brand.description && (
-                  <p className="text-xs text-zinc-400 mt-3 line-clamp-2 leading-relaxed">
-                    {brand.description}
-                  </p>
-                )}
-              </div>
-
-              <div className="mt-4 pt-3 border-t border-[#2a2a2a] flex items-center justify-between text-[11px] text-zinc-500 font-mono">
-                <span className="flex items-center gap-1">
-                  <Package className="w-3.5 h-3.5" />
-                  {productCount} Products
-                </span>
-                <span>{brand.country || 'Global'}</span>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Numbered Pagination Toolbar */}
-      {totalPages > 1 && (
-        <div className="pt-6 border-t border-[#242424] flex flex-col sm:flex-row items-center justify-between gap-4 select-none">
-          <div className="flex flex-wrap items-center gap-3 text-xs font-mono text-zinc-400">
-            <span>
-              Showing <strong className="text-white">{startItem}-{endItem}</strong> of <strong className="text-white">{totalCount}</strong> Brands
-            </span>
-            <div className="flex items-center gap-1.5 sm:ml-2 sm:pl-3 sm:border-l border-[#2a2a2a]">
-              <span className="text-zinc-500">Per page:</span>
-              {[12, 24, 48, 96].map((size) => (
-                <button
-                  key={size}
-                  onClick={() => handlePageSizeChange(size)}
-                  className={`px-2 py-0.5 rounded text-[11px] font-mono transition ${
-                    pageSize === size
-                      ? 'bg-white text-black font-bold'
-                      : 'bg-[#1e1e1e] text-zinc-400 hover:text-white border border-[#2a2a2a]'
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
+            <div className="text-xs font-mono text-zinc-400">
+              {filteredBrands.length} of {totalBrands} Brands
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage <= 1 || isPending}
-              className="p-2 rounded bg-[#181818] border border-[#2a2a2a] text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
-              title="Previous Page"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
+          {/* Brands Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredBrands.map((brand) => {
+              const productCount = Array.isArray(brand.products)
+                ? brand.products.length
+                : brand.products?.[0]?.count || 0
+              const revShare = brand.brand_members?.[0]?.revenue_share_percent || 70
 
-            {/* Numbered Pages 1, 2, 3, 4 ... */}
-            {pageNumbers.map((p, idx) => {
-              if (p === '...') {
-                return (
-                  <span key={`dots-${idx}`} className="px-2 py-1 text-zinc-500 font-mono text-xs">
-                    ...
-                  </span>
-                )
-              }
-              const pageNum = Number(p)
-              const isActive = pageNum === currentPage
               return (
-                <button
-                  key={pageNum}
-                  onClick={() => handlePageChange(pageNum)}
-                  disabled={isPending}
-                  className={`min-w-[34px] h-[34px] px-2 rounded font-mono text-xs font-bold transition flex items-center justify-center ${
-                    isActive
-                      ? 'bg-white text-black shadow-sm'
-                      : 'bg-[#181818] border border-[#2a2a2a] text-zinc-400 hover:text-white hover:bg-[#202020]'
-                  }`}
+                <div
+                  key={brand.id}
+                  onClick={() => handleSelectBrand(brand)}
+                  className="epic-card p-5 cursor-pointer hover:border-zinc-500 transition group flex flex-col justify-between"
                 >
-                  {pageNum}
-                </button>
+                  <div>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-lg bg-[#181818] border border-[#2a2a2a] flex items-center justify-center overflow-hidden shrink-0">
+                          {brand.logo_url ? (
+                            <img
+                              src={brand.logo_url}
+                              alt={brand.name}
+                              className="w-full h-full object-contain p-1"
+                            />
+                          ) : (
+                            <Building2 className="w-5 h-5 text-zinc-500" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-white group-hover:text-zinc-200 flex items-center gap-1.5">
+                            {brand.name}
+                            {brand.contract_accepted_at && (
+                              <span title="Distribution Agreement Signed">
+                                <CheckCircle className="w-3.5 h-3.5 text-zinc-300" />
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[11px] font-mono text-zinc-500">/{brand.slug}</div>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300">
+                        {revShare}% Share
+                      </span>
+                    </div>
+
+                    {brand.description && (
+                      <p className="text-xs text-zinc-400 mt-3 line-clamp-2 leading-relaxed">
+                        {brand.description}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-[#2a2a2a] flex items-center justify-between text-[11px] text-zinc-500 font-mono">
+                    <span className="flex items-center gap-1">
+                      <Package className="w-3.5 h-3.5" />
+                      {productCount} Products
+                    </span>
+                    <span>{brand.country || 'Global'}</span>
+                  </div>
+                </div>
               )
             })}
-
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage >= totalPages || isPending}
-              className="p-2 rounded bg-[#181818] border border-[#2a2a2a] text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
-              title="Next Page"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
           </div>
+
+          {/* Numbered Pagination Toolbar */}
+          {totalPages > 1 && (
+            <div className="pt-6 border-t border-[#242424] flex flex-col sm:flex-row items-center justify-between gap-4 select-none">
+              <div className="flex flex-wrap items-center gap-3 text-xs font-mono text-zinc-400">
+                <span>
+                  Showing <strong className="text-white">{startItem}-{endItem}</strong> of{' '}
+                  <strong className="text-white">{totalCount}</strong> Brands
+                </span>
+                <div className="flex items-center gap-1.5 sm:ml-2 sm:pl-3 sm:border-l border-[#2a2a2a]">
+                  <span className="text-zinc-500">Per page:</span>
+                  {[12, 24, 48, 96].map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => handlePageSizeChange(size)}
+                      className={`px-2 py-0.5 rounded text-[11px] font-mono transition ${
+                        pageSize === size
+                          ? 'bg-white text-black font-bold'
+                          : 'bg-[#1e1e1e] text-zinc-400 hover:text-white border border-[#2a2a2a]'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage <= 1 || isPending}
+                  className="p-2 rounded bg-[#181818] border border-[#2a2a2a] text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
+                  title="Previous Page"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                {pageNumbers.map((p, idx) => {
+                  if (p === '...') {
+                    return (
+                      <span key={`dots-${idx}`} className="px-2 py-1 text-zinc-500 font-mono text-xs">
+                        ...
+                      </span>
+                    )
+                  }
+                  const pageNum = Number(p)
+                  const isActive = pageNum === currentPage
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      disabled={isPending}
+                      className={`min-w-[34px] h-[34px] px-2 rounded font-mono text-xs font-bold transition flex items-center justify-center ${
+                        isActive
+                          ? 'bg-white text-black shadow-sm'
+                          : 'bg-[#181818] border border-[#2a2a2a] text-zinc-400 hover:text-white hover:bg-[#202020]'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  )
+                })}
+
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= totalPages || isPending}
+                  className="p-2 rounded bg-[#181818] border border-[#2a2a2a] text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
+                  title="Next Page"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

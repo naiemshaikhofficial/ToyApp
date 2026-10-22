@@ -194,3 +194,39 @@ export async function updateBrandCommissionAction(formData: {
     return { success: false, error: err.message }
   }
 }
+
+export async function toggleBrandVerificationAction(formData: {
+  brandId: string
+  verify: boolean
+  staff_email: string
+}) {
+  try {
+    const supabase = getAdminClient()
+    const { data, error } = await supabase
+      .from('brands')
+      .update({
+        contract_accepted_at: formData.verify ? new Date().toISOString() : null,
+        contract_version: formData.verify ? 'v2.4' : null,
+        contract_signatory_name: formData.verify ? 'Verified by Admin' : null,
+      })
+      .eq('id', formData.brandId)
+      .select()
+      .single()
+
+    if (error) return { success: false, error: error.message }
+
+    await logAdminActivity({
+      staff_email: formData.staff_email,
+      action: formData.verify ? 'BRAND_VERIFIED' : 'BRAND_VERIFICATION_REVOKED',
+      target_type: 'brand',
+      target_id: formData.brandId,
+      details: { verified: formData.verify },
+    })
+
+    revalidatePath('/brands')
+    return { success: true, brand: data }
+  } catch (err: any) {
+    return { success: false, error: err.message }
+  }
+}
+

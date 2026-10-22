@@ -92,10 +92,9 @@ const SECTIONS: SectionConfig[] = [
     defaultHref: '/brands',
     headerTitle: 'Brand Management',
     subItems: [
-      { label: 'All Brands', href: '/brands', icon: Building2, badge: '303+' },
+      { label: 'Brands', href: '/brands', icon: Building2, badge: '303+' },
       { label: 'Onboard Brand', href: '/brands?action=new', icon: PlusCircle, isAction: true },
-      { label: 'Brand Licenses & DRM', href: '/licenses', icon: Key },
-      { label: 'Brand Verification', href: '/brands', icon: ShieldCheck },
+      { label: 'Brand Verification', href: '/brands?tab=verification', icon: ShieldCheck, badge: 'Review' },
     ],
   },
   {
