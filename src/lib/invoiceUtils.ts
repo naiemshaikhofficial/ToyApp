@@ -67,8 +67,8 @@ export function generateInvoiceHTML(item: InvoiceRecord): string {
           body { 
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
             padding: 40px; 
-            color: #0f172a; 
-            background: #0f1115; 
+            color: #121212; 
+            background: #121212; 
             line-height: 1.5;
             -webkit-font-smoothing: antialiased;
           }
@@ -76,7 +76,7 @@ export function generateInvoiceHTML(item: InvoiceRecord): string {
             max-width: 860px;
             margin: 0 auto;
             background: #ffffff;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #e4e4e7;
             border-radius: 12px;
             padding: 48px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
@@ -85,7 +85,7 @@ export function generateInvoiceHTML(item: InvoiceRecord): string {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            border-bottom: 2px solid #0f172a;
+            border-bottom: 2px solid #000000;
             padding-bottom: 28px;
             margin-bottom: 32px;
           }
@@ -95,13 +95,13 @@ export function generateInvoiceHTML(item: InvoiceRecord): string {
             letter-spacing: -0.8px;
             text-transform: uppercase;
             line-height: 1;
-            color: #0f172a;
+            color: #000000;
           }
           .brand-subtitle {
             font-size: 10px;
             font-weight: 800;
             letter-spacing: 1.5px;
-            color: #64748b;
+            color: #71717a;
             text-transform: uppercase;
             margin-top: 6px;
           }
@@ -110,9 +110,9 @@ export function generateInvoiceHTML(item: InvoiceRecord): string {
             font-family: 'JetBrains Mono', monospace;
             font-size: 10px;
             font-weight: 800;
-            color: #0f172a;
-            background: #f1f5f9;
-            border: 1px solid #cbd5e1;
+            color: #000000;
+            background: #f4f4f5;
+            border: 1px solid #d4d4d8;
             padding: 4px 10px;
             border-radius: 4px;
             text-transform: uppercase;
@@ -122,13 +122,13 @@ export function generateInvoiceHTML(item: InvoiceRecord): string {
           .inv-heading {
             font-size: 24px;
             font-weight: 900;
-            color: #0f172a;
+            color: #000000;
           }
           .inv-sub {
             font-family: 'JetBrains Mono', monospace;
             font-size: 12px;
             font-weight: 600;
-            color: #64748b;
+            color: #71717a;
             margin-top: 4px;
           }
           .meta-grid {
@@ -142,17 +142,17 @@ export function generateInvoiceHTML(item: InvoiceRecord): string {
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1.2px;
-            color: #94a3b8;
+            color: #a1a1aa;
             margin-bottom: 8px;
           }
           .meta-box p {
             font-size: 13px;
-            color: #334155;
+            color: #27272a;
             line-height: 1.6;
           }
           .table-wrapper {
             margin-bottom: 32px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #e4e4e7;
             border-radius: 8px;
             overflow: hidden;
           }
@@ -161,7 +161,7 @@ export function generateInvoiceHTML(item: InvoiceRecord): string {
             border-collapse: collapse;
           }
           .table th {
-            background: #0f172a;
+            background: #000000;
             color: #ffffff;
             padding: 12px 16px;
             font-size: 11px;
@@ -173,8 +173,8 @@ export function generateInvoiceHTML(item: InvoiceRecord): string {
           .table td {
             padding: 16px;
             font-size: 13px;
-            border-bottom: 1px solid #e2e8f0;
-            color: #1e293b;
+            border-bottom: 1px solid #e4e4e7;
+            color: #18181b;
           }
           .totals-wrapper {
             margin-left: auto;
@@ -186,19 +186,19 @@ export function generateInvoiceHTML(item: InvoiceRecord): string {
             justify-content: space-between;
             padding: 8px 0;
             font-size: 13px;
-            color: #64748b;
+            color: #71717a;
           }
           .totals-row.grand-total {
-            border-top: 2px solid #0f172a;
+            border-top: 2px solid #000000;
             padding-top: 12px;
             margin-top: 8px;
-            color: #0f172a;
+            color: #000000;
             font-size: 18px;
             font-weight: 900;
           }
           .license-box {
-            background: #f8fafc;
-            border: 1px dashed #cbd5e1;
+            background: #f4f4f5;
+            border: 1px dashed #d4d4d8;
             border-radius: 8px;
             padding: 16px 20px;
             margin-bottom: 32px;
@@ -208,22 +208,22 @@ export function generateInvoiceHTML(item: InvoiceRecord): string {
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: #64748b;
+            color: #71717a;
             margin-bottom: 4px;
           }
           .license-key {
             font-family: 'JetBrains Mono', monospace;
             font-size: 14px;
             font-weight: 700;
-            color: #0f172a;
+            color: #000000;
             letter-spacing: 1px;
           }
           .footer {
-            border-top: 1px solid #e2e8f0;
+            border-top: 1px solid #e4e4e7;
             padding-top: 24px;
             text-align: center;
             font-size: 11px;
-            color: #94a3b8;
+            color: #a1a1aa;
           }
           @media print {
             body { padding: 0; background: #ffffff; }

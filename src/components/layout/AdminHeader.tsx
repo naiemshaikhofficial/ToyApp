@@ -27,9 +27,9 @@ export function AdminHeader({ title, subtitle }: AdminHeaderProps) {
       <div className="flex items-center gap-3">
         {/* Database Status Pill */}
         <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#202020] border border-[#2a2a2a] text-[11px] font-mono text-zinc-300">
-          <Database className="w-3.5 h-3.5 text-emerald-400" />
-          <span>PRODUCERTOY LIVE CLUSTER</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <Database className="w-3.5 h-3.5 text-zinc-300" />
+          <span>TOY APP CLUSTER</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-white" />
         </div>
 
         {/* Refresh Action */}

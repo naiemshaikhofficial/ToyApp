@@ -237,8 +237,8 @@ export function ProductsClient({ initialProducts, totalProducts, brands }: Produ
         <div
           className={`p-4 rounded-lg flex items-center justify-between text-xs font-semibold ${
             notification.type === 'success'
-              ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800'
-              : 'bg-red-950/80 text-red-300 border border-red-800'
+              ? 'bg-[#202020] text-white border border-[#383838]'
+              : 'bg-[#202020] text-zinc-300 border border-zinc-700'
           }`}
         >
           <span>{notification.text}</span>
@@ -331,7 +331,7 @@ export function ProductsClient({ initialProducts, totalProducts, brands }: Produ
                               title="Play Demo"
                             >
                               {playingAudioUrl === p.demo_audio_url ? (
-                                <Pause className="w-4 h-4 text-emerald-400" />
+                                <Pause className="w-4 h-4 text-white" />
                               ) : (
                                 <Play className="w-4 h-4 text-white" />
                               )}
@@ -341,7 +341,7 @@ export function ProductsClient({ initialProducts, totalProducts, brands }: Produ
                         <div>
                           <div className="font-bold text-white text-xs hover:text-zinc-300 flex items-center gap-1.5">
                             {p.name}
-                            {p.is_featured && <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />}
+                            {p.is_featured && <Star className="w-3.5 h-3.5 text-white fill-white" />}
                           </div>
                           <div className="text-[10px] text-zinc-500 font-mono mt-0.5">
                             v{p.version || '1.0.0'} • /{p.slug}
@@ -385,8 +385,8 @@ export function ProductsClient({ initialProducts, totalProducts, brands }: Produ
                         onClick={() => handleToggleActive(p.id, p.is_active)}
                         className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border transition ${
                           p.is_active
-                            ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800'
-                            : 'bg-zinc-800 text-zinc-400 border-zinc-700'
+                            ? 'bg-[#262626] text-white border-[#383838]'
+                            : 'bg-[#181818] text-zinc-500 border-[#2a2a2a]'
                         }`}
                       >
                         {p.is_active ? 'PUBLISHED' : 'DRAFT'}
@@ -398,9 +398,9 @@ export function ProductsClient({ initialProducts, totalProducts, brands }: Produ
                         <button
                           onClick={() => handleToggleFeatured(p.id, p.is_featured)}
                           title="Toggle Featured"
-                          className="p-1.5 rounded hover:bg-[#2a2a2a] text-zinc-400 hover:text-amber-400 transition"
+                          className="p-1.5 rounded hover:bg-[#2a2a2a] text-zinc-400 hover:text-white transition"
                         >
-                          <Star className={`w-3.5 h-3.5 ${p.is_featured ? 'text-amber-400 fill-amber-400' : ''}`} />
+                          <Star className={`w-3.5 h-3.5 ${p.is_featured ? 'text-white fill-white' : ''}`} />
                         </button>
                         <button
                           onClick={() => handleOpenEdit(p)}

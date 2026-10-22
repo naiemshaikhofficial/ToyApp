@@ -95,8 +95,8 @@ export function StaffClient({ initialStaff, initialLogs }: StaffClientProps) {
         <div
           className={`p-4 rounded-lg flex items-center justify-between text-xs font-semibold ${
             notification.type === 'success'
-              ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800'
-              : 'bg-red-950/80 text-red-300 border border-red-800'
+              ? 'bg-[#202020] text-white border border-white/20'
+              : 'bg-[#181818] text-zinc-300 border border-zinc-700'
           }`}
         >
           <span>{notification.text}</span>
@@ -173,8 +173,8 @@ export function StaffClient({ initialStaff, initialLogs }: StaffClientProps) {
                       <span
                         className={`text-[9px] font-bold px-2 py-0.5 rounded border uppercase ${
                           member.status === 'active'
-                            ? 'bg-emerald-950 text-emerald-400 border-emerald-800'
-                            : 'bg-red-950 text-red-400 border-red-800'
+                            ? 'bg-white text-black border-white'
+                            : 'bg-[#262626] text-zinc-400 border-[#383838]'
                         }`}
                       >
                         {member.status}

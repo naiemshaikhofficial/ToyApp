@@ -25,17 +25,17 @@ export const ROLE_DEFINITIONS: Record<StaffRole, { title: string; description: s
   catalog_manager: {
     title: 'Catalog & Brand Manager',
     description: 'Product lifecycle, installer verification, audio demos, brand onboarding, and metadata.',
-    badgeColor: 'bg-emerald-950 text-emerald-400 border-emerald-800',
+    badgeColor: 'bg-[#262626] text-white border-[#383838]',
   },
   finance_manager: {
     title: 'Orders & Finance Director',
     description: 'Order audits, international tax invoices, creator payout settlements, and revenue splits.',
-    badgeColor: 'bg-amber-950 text-amber-400 border-amber-800',
+    badgeColor: 'bg-[#202020] text-zinc-200 border-[#383838]',
   },
   support_agent: {
     title: 'Support & Licensing Specialist',
     description: 'Hardware workstation seat revocations, customer order verification, and inquiry resolution.',
-    badgeColor: 'bg-blue-950 text-blue-400 border-blue-800',
+    badgeColor: 'bg-[#181818] text-zinc-300 border-[#2a2a2a]',
   },
 }
 

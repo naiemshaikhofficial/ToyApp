@@ -103,8 +103,8 @@ export function LicensesClient({ initialActivations, totalActivations, serialInv
         <div
           className={`p-4 rounded-lg flex items-center justify-between text-xs font-semibold ${
             notification.type === 'success'
-              ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800'
-              : 'bg-red-950/80 text-red-300 border border-red-800'
+              ? 'bg-[#202020] text-white border border-white/20'
+              : 'bg-[#181818] text-zinc-300 border border-zinc-700'
           }`}
         >
           <span>{notification.text}</span>
@@ -217,8 +217,8 @@ export function LicensesClient({ initialActivations, totalActivations, serialInv
                           <span
                             className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded border uppercase ${
                               act.is_active
-                                ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800'
-                                : 'bg-red-950/80 text-red-300 border-red-800'
+                                ? 'bg-white text-black border-white'
+                                : 'bg-[#262626] text-zinc-400 border-[#383838]'
                             }`}
                           >
                             {act.is_active ? 'CLAIMED' : 'REVOKED'}
@@ -229,7 +229,7 @@ export function LicensesClient({ initialActivations, totalActivations, serialInv
                           {act.is_active ? (
                             <button
                               onClick={() => handleRevokeSeat(act.id, act.device_name)}
-                              className="px-2.5 py-1 rounded bg-red-950/60 hover:bg-red-900 text-red-300 border border-red-800 text-[10px] font-mono font-bold transition flex items-center gap-1 ml-auto"
+                              className="px-2.5 py-1 rounded bg-[#262626] hover:bg-[#34363d] text-white border border-[#383838] text-[10px] font-mono font-bold transition flex items-center gap-1 ml-auto"
                             >
                               <RotateCcw className="w-3 h-3" />
                               <span>Revoke</span>
@@ -262,7 +262,7 @@ export function LicensesClient({ initialActivations, totalActivations, serialInv
               <div
                 key={item.id}
                 className={`epic-card p-5 space-y-3 ${
-                  item.isDepleted ? 'border-amber-700/80 bg-amber-950/10' : ''
+                  item.isDepleted ? 'border-white/30 bg-[#222222]' : ''
                 }`}
               >
                 <div className="flex items-start justify-between">
@@ -271,7 +271,7 @@ export function LicensesClient({ initialActivations, totalActivations, serialInv
                     <p className="text-[11px] font-mono text-zinc-500">{item.brand}</p>
                   </div>
                   {item.isDepleted && (
-                    <span className="flex items-center gap-1 text-[9px] font-mono font-bold text-amber-400 bg-amber-950 px-2 py-0.5 rounded border border-amber-800 uppercase">
+                    <span className="flex items-center gap-1 text-[9px] font-mono font-bold text-white bg-[#2a2a2a] px-2 py-0.5 rounded border border-[#383838] uppercase">
                       <AlertTriangle className="w-3 h-3" />
                       Low Stock
                     </span>
@@ -289,7 +289,7 @@ export function LicensesClient({ initialActivations, totalActivations, serialInv
                   </div>
                   <div className="p-2 rounded bg-[#181818] border border-[#2a2a2a]">
                     <div className="text-[10px] text-zinc-500 uppercase">Available</div>
-                    <div className={`text-sm font-bold mt-0.5 ${item.isDepleted ? 'text-amber-400' : 'text-emerald-400'}`}>
+                    <div className="text-sm font-bold mt-0.5 text-white">
                       {item.available}
                     </div>
                   </div>

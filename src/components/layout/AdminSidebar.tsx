@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard,
   Building2,
@@ -13,7 +13,9 @@ import {
   ShieldCheck,
   Users2,
   ExternalLink,
+  LogOut,
 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 interface AdminSidebarProps {
   currentStaffRole?: string
@@ -22,6 +24,19 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ currentStaffRole = 'super_admin', currentStaffName = 'Naiem Shaikh' }: AdminSidebarProps) {
   const pathname = usePathname()
+  const router = useRouter()
+
+  const handleSignOut = async () => {
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      router.push('/login')
+      router.refresh()
+    } catch (err) {
+      console.error('Sign out error:', err)
+      router.push('/login')
+    }
+  }
 
   const navItems = [
     {
@@ -191,12 +206,19 @@ export function AdminSidebar({ currentStaffRole = 'super_admin', currentStaffNam
           <div className="flex-1 min-w-0">
             <div className="text-xs font-semibold text-white truncate">{currentStaffName}</div>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
               <span className="text-[10px] font-mono uppercase text-zinc-400 tracking-wider">
                 {currentStaffRole.replace('_', ' ')}
               </span>
             </div>
           </div>
+          <button
+            onClick={handleSignOut}
+            title="Sign Out"
+            className="p-1.5 rounded hover:bg-[#262626] text-zinc-400 hover:text-white transition"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
     </aside>

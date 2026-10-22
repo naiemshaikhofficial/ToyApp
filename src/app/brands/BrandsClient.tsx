@@ -184,8 +184,8 @@ export function BrandsClient({ initialBrands, totalBrands }: BrandsClientProps) 
         <div
           className={`p-4 rounded-lg flex items-center justify-between text-xs font-semibold ${
             message.type === 'success'
-              ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800'
-              : 'bg-red-950/80 text-red-300 border border-red-800'
+              ? 'bg-[#202020] text-white border border-[#383838]'
+              : 'bg-[#202020] text-zinc-300 border border-zinc-700'
           }`}
         >
           <span>{message.text}</span>
@@ -251,7 +251,7 @@ export function BrandsClient({ initialBrands, totalBrands }: BrandsClientProps) 
                         {brand.name}
                         {brand.contract_accepted_at && (
                           <span title="Distribution Agreement Signed">
-                            <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                            <CheckCircle className="w-3.5 h-3.5 text-zinc-300" />
                           </span>
                         )}
                       </div>
@@ -299,7 +299,7 @@ export function BrandsClient({ initialBrands, totalBrands }: BrandsClientProps) 
                   <h3 className="text-lg font-black text-white flex items-center gap-2">
                     {selectedBrand.name}
                     {selectedBrand.contract_accepted_at && (
-                      <CheckCircle className="w-4 h-4 text-emerald-400" />
+                      <CheckCircle className="w-4 h-4 text-white" />
                     )}
                   </h3>
                   <p className="text-xs font-mono text-zinc-400">Slug: {selectedBrand.slug}</p>
@@ -330,8 +330,8 @@ export function BrandsClient({ initialBrands, totalBrands }: BrandsClientProps) 
               </div>
               <div className="p-3 rounded bg-[#202020] border border-[#2a2a2a]">
                 <div className="text-[10px] font-mono text-zinc-500 uppercase">Contract Compliance</div>
-                <div className="text-emerald-400 font-medium mt-1 flex items-center gap-1">
-                  <FileCheck2 className="w-3.5 h-3.5" />
+                <div className="text-white font-medium mt-1 flex items-center gap-1">
+                  <FileCheck2 className="w-3.5 h-3.5 text-zinc-400" />
                   <span>Version {selectedBrand.contract_version || 'v1.0'} Verified</span>
                 </div>
               </div>
@@ -358,7 +358,7 @@ export function BrandsClient({ initialBrands, totalBrands }: BrandsClientProps) 
                       </div>
                       <div className="text-right">
                         <div className="font-mono font-bold text-white">${p.price_usd}</div>
-                        <span className={`text-[9px] font-mono px-1.5 py-0.2 rounded ${p.is_active ? 'bg-emerald-950 text-emerald-400' : 'bg-zinc-800 text-zinc-400'}`}>
+                        <span className={`text-[9px] font-mono px-1.5 py-0.2 rounded border ${p.is_active ? 'bg-[#262626] text-white border-[#383838]' : 'bg-[#181818] text-zinc-500 border-[#2a2a2a]'}`}>
                           {p.is_active ? 'LIVE' : 'DRAFT'}
                         </span>
                       </div>

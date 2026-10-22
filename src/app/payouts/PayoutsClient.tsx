@@ -71,8 +71,8 @@ export function PayoutsClient({ initialPayouts, settlementData }: PayoutsClientP
         <div
           className={`p-4 rounded-lg flex items-center justify-between text-xs font-semibold ${
             notification.type === 'success'
-              ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800'
-              : 'bg-red-950/80 text-red-300 border border-red-800'
+              ? 'bg-[#202020] text-white border border-[#383838]'
+              : 'bg-[#202020] text-zinc-300 border border-zinc-700'
           }`}
         >
           <span>{notification.text}</span>
@@ -87,7 +87,7 @@ export function PayoutsClient({ initialPayouts, settlementData }: PayoutsClientP
         <div className="epic-card p-5">
           <div className="flex items-center justify-between text-zinc-400">
             <span className="text-xs font-mono uppercase font-semibold">Normalized Gross GMV</span>
-            <DollarSign className="w-4 h-4 text-emerald-400" />
+            <DollarSign className="w-4 h-4 text-white" />
           </div>
           <div className="mt-3">
             <div className="text-2xl font-black text-white font-mono">
@@ -128,10 +128,10 @@ export function PayoutsClient({ initialPayouts, settlementData }: PayoutsClientP
         <div className="epic-card p-5">
           <div className="flex items-center justify-between text-zinc-400">
             <span className="text-xs font-mono uppercase font-semibold">Outstanding Balance</span>
-            <AlertTriangle className="w-4 h-4 text-amber-400" />
+            <AlertTriangle className="w-4 h-4 text-zinc-400" />
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-black text-amber-400 font-mono">
+            <div className="text-2xl font-black text-white font-mono">
               ${settlement?.outstandingBalanceUsd?.toFixed(2) || '0.00'}
             </div>
             <p className="text-[11px] text-zinc-400 mt-1 font-mono">Pending Platform Liabilities</p>
@@ -193,12 +193,12 @@ export function PayoutsClient({ initialPayouts, settlementData }: PayoutsClientP
                       <span
                         className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border uppercase ${
                           pay.status === 'completed'
-                            ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800'
+                            ? 'bg-[#262626] text-white border-[#383838]'
                             : pay.status === 'processing'
-                            ? 'bg-blue-950/80 text-blue-300 border-blue-800'
+                            ? 'bg-[#202020] text-zinc-200 border-[#383838]'
                             : pay.status === 'on_hold'
-                            ? 'bg-amber-950/80 text-amber-300 border-amber-800'
-                            : 'bg-zinc-800 text-zinc-400 border-zinc-700'
+                            ? 'bg-[#181818] text-zinc-400 border-[#2a2a2a]'
+                            : 'bg-zinc-800 text-zinc-500 border-zinc-700'
                         }`}
                       >
                         {pay.status}

@@ -32,7 +32,7 @@ export default async function AdminDashboardPage() {
           <div className="epic-card p-5">
             <div className="flex items-center justify-between text-zinc-400">
               <span className="text-xs font-mono uppercase font-semibold">Normalized GMV</span>
-              <DollarSign className="w-4 h-4 text-emerald-400" />
+              <DollarSign className="w-4 h-4 text-white" />
             </div>
             <div className="mt-3">
               <div className="text-2xl font-black tracking-tight text-white font-mono">
@@ -115,7 +115,7 @@ export default async function AdminDashboardPage() {
 
           <div className="p-4 rounded-lg bg-[#181818] border border-[#2a2a2a] flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <ShieldCheck className="w-5 h-5 text-emerald-400" />
+              <ShieldCheck className="w-5 h-5 text-white" />
               <div>
                 <div className="text-xs text-zinc-400 uppercase font-mono font-semibold">Active Hardware Seats</div>
                 <div className="text-lg font-bold font-mono text-white mt-0.5">{stats?.activeDevices || 0} machines</div>
@@ -126,7 +126,7 @@ export default async function AdminDashboardPage() {
 
           <div className="p-4 rounded-lg bg-[#181818] border border-[#2a2a2a] flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Sparkles className="w-5 h-5 text-amber-400" />
+              <Sparkles className="w-5 h-5 text-zinc-300" />
               <div>
                 <div className="text-xs text-zinc-400 uppercase font-mono font-semibold">Creator Retain (70%)</div>
                 <div className="text-lg font-bold font-mono text-white mt-0.5">
@@ -203,7 +203,7 @@ export default async function AdminDashboardPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xs font-mono font-bold text-emerald-400">${b.revenueUsd.toFixed(2)}</div>
+                      <div className="text-xs font-mono font-bold text-white">${b.revenueUsd.toFixed(2)}</div>
                       <div className="text-[10px] text-zinc-500 font-mono">Gross Volume</div>
                     </div>
                   </div>

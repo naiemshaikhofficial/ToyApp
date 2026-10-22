@@ -105,8 +105,8 @@ export function OrdersClient({ initialOrders, totalOrders }: OrdersClientProps) 
         <div
           className={`p-4 rounded-lg flex items-center justify-between text-xs font-semibold ${
             notification.type === 'success'
-              ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800'
-              : 'bg-red-950/80 text-red-300 border border-red-800'
+              ? 'bg-[#202020] text-white border border-[#383838]'
+              : 'bg-[#202020] text-zinc-300 border border-zinc-700'
           }`}
         >
           <span>{notification.text}</span>
@@ -275,7 +275,7 @@ export function OrdersClient({ initialOrders, totalOrders }: OrdersClientProps) 
                   {selectedOrder.currency === 'INR' ? '₹' : '$'}
                   {Number(selectedOrder.amount_paid || 0).toFixed(2)} {selectedOrder.currency}
                 </div>
-                <div className="text-[10px] font-mono text-emerald-400 font-bold uppercase">Payment Captured</div>
+                <div className="text-[10px] font-mono text-zinc-300 font-bold uppercase">Payment Captured</div>
               </div>
             </div>
 
@@ -337,7 +337,7 @@ export function OrdersClient({ initialOrders, totalOrders }: OrdersClientProps) 
             <div className="flex items-center justify-between pt-4 border-t border-[#2a2a2a]">
               <button
                 onClick={() => setIsRefundModalOpen(true)}
-                className="px-3 py-1.5 rounded bg-red-950/60 hover:bg-red-900 text-red-300 border border-red-800 text-xs font-mono font-bold transition flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded bg-[#202020] hover:bg-[#2a2a2a] text-zinc-200 border border-[#383838] text-xs font-mono font-bold transition flex items-center gap-1.5"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Process Refund & Revoke</span>
@@ -365,8 +365,8 @@ export function OrdersClient({ initialOrders, totalOrders }: OrdersClientProps) 
         <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
           <form onSubmit={handleRefundSubmit} className="epic-card bg-[#181818] max-w-md w-full p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[#2a2a2a]">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-red-400 flex items-center gap-2">
-                <RotateCcw className="w-4 h-4" />
+              <h3 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                <RotateCcw className="w-4 h-4 text-zinc-400" />
                 <span>Confirm Order Refund</span>
               </h3>
               <button type="button" onClick={() => setIsRefundModalOpen(false)} className="text-zinc-500 hover:text-white">
@@ -405,7 +405,7 @@ export function OrdersClient({ initialOrders, totalOrders }: OrdersClientProps) 
               <button type="button" onClick={() => setIsRefundModalOpen(false)} className="epic-btn-outline">
                 Cancel
               </button>
-              <button type="submit" disabled={isPending} className="px-4 py-2 rounded bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase font-mono transition">
+              <button type="submit" disabled={isPending} className="epic-btn-primary">
                 {isPending ? 'Processing...' : 'Confirm Refund'}
               </button>
             </div>
