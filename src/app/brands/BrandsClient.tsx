@@ -51,6 +51,24 @@ export function BrandsClient({ initialBrands, totalBrands }: BrandsClientProps) 
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
 
+  React.useEffect(() => {
+    const handleCheckAction = () => {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search)
+        if (params.get('action') === 'new') {
+          setIsCreateOpen(true)
+        }
+      }
+    }
+    handleCheckAction()
+    window.addEventListener('popstate', handleCheckAction)
+    window.addEventListener('toy-onboard-brand', () => setIsCreateOpen(true))
+    return () => {
+      window.removeEventListener('popstate', handleCheckAction)
+      window.removeEventListener('toy-onboard-brand', () => setIsCreateOpen(true))
+    }
+  }, [])
+
   // Create Form State
   const [createForm, setCreateForm] = useState({
     name: '',
