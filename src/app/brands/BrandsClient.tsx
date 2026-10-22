@@ -15,6 +15,8 @@ import {
   Package,
   X,
   FileCheck2,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import {
   createBrandAction,
@@ -33,6 +35,11 @@ export function BrandsClient({ initialBrands, totalBrands }: BrandsClientProps) 
   const [brands, setBrands] = useState<any[]>(initialBrands)
   const [search, setSearch] = useState('')
   const [isPending, startTransition] = useTransition()
+
+  // Numbered Pagination State
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(24)
+  const [totalCount, setTotalCount] = useState(totalBrands)
 
   // Selected brand for detail / edit
   const [selectedBrand, setSelectedBrand] = useState<any | null>(null)
@@ -68,6 +75,55 @@ export function BrandsClient({ initialBrands, totalBrands }: BrandsClientProps) 
     logo_url: '',
     revenue_share_percent: 70,
   })
+
+  // Numbered Pagination Calculations
+  const totalPages = Math.ceil(totalCount / pageSize) || 1
+  const startItem = totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1
+  const endItem = Math.min(currentPage * pageSize, totalCount)
+
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = []
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i)
+    } else {
+      if (currentPage <= 4) {
+        pages.push(1, 2, 3, 4, 5, '...', totalPages)
+      } else if (currentPage >= totalPages - 3) {
+        pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages)
+      } else {
+        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages)
+      }
+    }
+    return pages
+  }
+  const pageNumbers = getPageNumbers()
+
+  // Handle Page Change
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return
+    setCurrentPage(newPage)
+    startTransition(async () => {
+      const res = await getBrandsAction({ page: newPage, pageSize, search })
+      if (res.success) {
+        setBrands(res.data)
+        setTotalCount(res.total)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+    })
+  }
+
+  // Handle Page Size Change
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize)
+    setCurrentPage(1)
+    startTransition(async () => {
+      const res = await getBrandsAction({ page: 1, pageSize: newSize, search })
+      if (res.success) {
+        setBrands(res.data)
+        setTotalCount(res.total)
+      }
+    })
+  }
 
   // Filtered brands
   const filteredBrands = brands.filter((b) => {
@@ -105,10 +161,12 @@ export function BrandsClient({ initialBrands, totalBrands }: BrandsClientProps) 
   // Handle Search
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    setCurrentPage(1)
     startTransition(async () => {
-      const res = await getBrandsAction({ search, pageSize: 60 })
+      const res = await getBrandsAction({ search, page: 1, pageSize })
       if (res.success) {
         setBrands(res.data)
+        setTotalCount(res.total)
       }
     })
   }
@@ -281,6 +339,80 @@ export function BrandsClient({ initialBrands, totalBrands }: BrandsClientProps) 
           )
         })}
       </div>
+
+      {/* Numbered Pagination Toolbar */}
+      {totalPages > 1 && (
+        <div className="pt-6 border-t border-[#242424] flex flex-col sm:flex-row items-center justify-between gap-4 select-none">
+          <div className="flex flex-wrap items-center gap-3 text-xs font-mono text-zinc-400">
+            <span>
+              Showing <strong className="text-white">{startItem}-{endItem}</strong> of <strong className="text-white">{totalCount}</strong> Brands
+            </span>
+            <div className="flex items-center gap-1.5 sm:ml-2 sm:pl-3 sm:border-l border-[#2a2a2a]">
+              <span className="text-zinc-500">Per page:</span>
+              {[12, 24, 48, 96].map((size) => (
+                <button
+                  key={size}
+                  onClick={() => handlePageSizeChange(size)}
+                  className={`px-2 py-0.5 rounded text-[11px] font-mono transition ${
+                    pageSize === size
+                      ? 'bg-white text-black font-bold'
+                      : 'bg-[#1e1e1e] text-zinc-400 hover:text-white border border-[#2a2a2a]'
+                  }`}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage <= 1 || isPending}
+              className="p-2 rounded bg-[#181818] border border-[#2a2a2a] text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
+              title="Previous Page"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {/* Numbered Pages 1, 2, 3, 4 ... */}
+            {pageNumbers.map((p, idx) => {
+              if (p === '...') {
+                return (
+                  <span key={`dots-${idx}`} className="px-2 py-1 text-zinc-500 font-mono text-xs">
+                    ...
+                  </span>
+                )
+              }
+              const pageNum = Number(p)
+              const isActive = pageNum === currentPage
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => handlePageChange(pageNum)}
+                  disabled={isPending}
+                  className={`min-w-[34px] h-[34px] px-2 rounded font-mono text-xs font-bold transition flex items-center justify-center ${
+                    isActive
+                      ? 'bg-white text-black shadow-sm'
+                      : 'bg-[#181818] border border-[#2a2a2a] text-zinc-400 hover:text-white hover:bg-[#202020]'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              )
+            })}
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages || isPending}
+              className="p-2 rounded bg-[#181818] border border-[#2a2a2a] text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
+              title="Next Page"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Selected Brand Detail Modal */}
       {selectedBrand && !isEditOpen && (

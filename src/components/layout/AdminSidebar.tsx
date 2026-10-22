@@ -12,6 +12,8 @@ import {
   Wallet,
   ShieldCheck,
   Users2,
+  Users,
+  LifeBuoy,
   ExternalLink,
   LogOut,
 } from 'lucide-react'
@@ -21,6 +23,69 @@ interface AdminSidebarProps {
   currentStaffRole?: string
   currentStaffName?: string
 }
+
+const NAV_ITEMS = [
+  {
+    label: 'Toy Overview',
+    href: '/',
+    icon: LayoutDashboard,
+    badge: null,
+  },
+  {
+    label: 'Brand Management',
+    href: '/brands',
+    icon: Building2,
+    badge: '303+',
+  },
+  {
+    label: 'Product Management',
+    href: '/products',
+    icon: Package,
+    badge: null,
+  },
+  {
+    label: 'Sales & Orders',
+    href: '/orders',
+    icon: Receipt,
+    badge: 'Live',
+  },
+  {
+    label: 'Tax Invoices',
+    href: '/invoices',
+    icon: FileSpreadsheet,
+    badge: null,
+  },
+  {
+    label: 'Creator Payouts',
+    href: '/payouts',
+    icon: Wallet,
+    badge: '70/30',
+  },
+  {
+    label: 'Licenses & Devices',
+    href: '/licenses',
+    icon: ShieldCheck,
+    badge: null,
+  },
+  {
+    label: 'Customer Accounts',
+    href: '/users',
+    icon: Users,
+    badge: '9+',
+  },
+  {
+    label: 'Support Helpdesk',
+    href: '/support',
+    icon: LifeBuoy,
+    badge: '2 Open',
+  },
+  {
+    label: 'Staff Base Roles',
+    href: '/staff',
+    icon: Users2,
+    badge: null,
+  },
+]
 
 export function AdminSidebar({ currentStaffRole = 'super_admin', currentStaffName = 'Naiem Shaikh' }: AdminSidebarProps) {
   const pathname = usePathname()
@@ -37,57 +102,6 @@ export function AdminSidebar({ currentStaffRole = 'super_admin', currentStaffNam
       router.push('/login')
     }
   }
-
-  const navItems = [
-    {
-      label: 'Toy Overview',
-      href: '/',
-      icon: LayoutDashboard,
-      badge: null,
-    },
-    {
-      label: 'Brand Management',
-      href: '/brands',
-      icon: Building2,
-      badge: '303+',
-    },
-    {
-      label: 'Product Management',
-      href: '/products',
-      icon: Package,
-      badge: null,
-    },
-    {
-      label: 'Sales & Orders',
-      href: '/orders',
-      icon: Receipt,
-      badge: 'Live',
-    },
-    {
-      label: 'Tax Invoices',
-      href: '/invoices',
-      icon: FileSpreadsheet,
-      badge: null,
-    },
-    {
-      label: 'Creator Payouts',
-      href: '/payouts',
-      icon: Wallet,
-      badge: '70/30',
-    },
-    {
-      label: 'Licenses & Devices',
-      href: '/licenses',
-      icon: ShieldCheck,
-      badge: null,
-    },
-    {
-      label: 'Staff Base Roles',
-      href: '/staff',
-      icon: Users2,
-      badge: null,
-    },
-  ]
 
   return (
     <aside className="w-64 bg-[#181818] border-r border-[#2a2a2a] flex flex-col shrink-0 min-h-screen sticky top-0 h-screen overflow-y-auto z-40">
@@ -120,7 +134,7 @@ export function AdminSidebar({ currentStaffRole = 'super_admin', currentStaffNam
         <div className="px-3 py-2 text-[10px] font-mono uppercase tracking-wider text-zinc-500 font-bold">
           Toy Modules
         </div>
-        {navItems.map((item) => {
+        {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href
           const Icon = item.icon
           return (

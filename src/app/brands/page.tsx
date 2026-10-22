@@ -5,7 +5,7 @@ import { AdminHeader } from '@/components/layout/AdminHeader'
 export const revalidate = 0
 
 export default async function BrandsPage() {
-  const result = await getBrandsAction({ page: 1, pageSize: 60 })
+  const result = await getBrandsAction({ page: 1, pageSize: 24 })
 
   return (
     <div className="flex-1 flex flex-col">
