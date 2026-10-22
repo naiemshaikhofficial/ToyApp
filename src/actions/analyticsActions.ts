@@ -1,6 +1,7 @@
 'use server'
 
 import { getAdminClient } from '@/lib/supabase/admin'
+import { getTursoClient } from '@/lib/turso/client'
 
 export interface EcosystemOverviewData {
   stats: {
@@ -25,6 +26,7 @@ export interface EcosystemOverviewData {
     totalCustomers: number
     totalArticles: number
     publishedArticles: number
+    totalTursoNews: number
 
     // Action Queues & Escalations
     totalTickets: number
@@ -266,7 +268,7 @@ export async function getDashboardAnalyticsAction(): Promise<{
       })
     })
 
-    // Add blogs to feed
+    // Add blogs to feed (Supabase)
     ;(recentBlogs || []).forEach((b) => {
       activityFeed.push({
         id: `blg-${b.id}`,
@@ -274,10 +276,37 @@ export async function getDashboardAnalyticsAction(): Promise<{
         title: `Editorial: ${b.title}`,
         subtitle: `Category: ${b.category || 'Deals'} • ${b.is_published ? 'Live on Store' : 'Draft'}`,
         timestamp: b.published_at || new Date().toISOString(),
-        badge: 'EDITORIAL DEAL',
-        href: '/news',
+        badge: 'SUPABASE BLOG',
+        href: '/blogs',
       })
     })
+
+    // Fetch Turso News Count & Recent Deals
+    let totalTursoNews = 160
+    try {
+      const turso = getTursoClient()
+      const [countRes, recentTurso] = await Promise.all([
+        turso.execute('SELECT count(*) as total FROM news_articles'),
+        turso.execute(
+          'SELECT id, slug, title, badge, category, published_at FROM news_articles ORDER BY published_at DESC LIMIT 2'
+        ),
+      ])
+      totalTursoNews = Number(countRes.rows[0]?.total || 160)
+
+      recentTurso.rows.forEach((r: any) => {
+        activityFeed.push({
+          id: `turso-${r.id}`,
+          type: 'ARTICLE',
+          title: `Deal: ${r.title}`,
+          subtitle: `${r.badge} • ${r.category}`,
+          timestamp: String(r.published_at || new Date().toISOString()),
+          badge: 'TURSO DEAL',
+          href: '/news',
+        })
+      })
+    } catch (e) {
+      console.error('Turso count error:', e)
+    }
 
     // Sort combined activity feed chronologically
     activityFeed.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
@@ -302,6 +331,7 @@ export async function getDashboardAnalyticsAction(): Promise<{
           totalCustomers: totalProfiles || 0,
           totalArticles: totalArticles || 0,
           publishedArticles: publishedArticles || 0,
+          totalTursoNews,
           totalTickets: totalTickets || 0,
           openTickets,
           escalatedToTeamTickets,

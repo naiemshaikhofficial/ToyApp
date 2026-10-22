@@ -1,20 +1,20 @@
-import { getArticlesAction } from '@/actions/newsActions'
-import { NewsClient } from './NewsClient'
+import { getTursoNewsAction } from '@/actions/tursoNewsActions'
+import { TursoNewsClient } from './TursoNewsClient'
 import { AdminHeader } from '@/components/layout/AdminHeader'
 
 export const revalidate = 0
 
 export default async function NewsPage() {
-  const result = await getArticlesAction({ page: 1, pageSize: 15 })
+  const result = await getTursoNewsAction({ page: 1, pageSize: 20 })
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col font-sans">
       <AdminHeader
-        title="News & Editorial Hub"
-        subtitle="Plugin Boutique Style Content Publishing, VST Deals, Tutorials & Editorial Role Management"
+        title="Turso Audio News & Deals Engine"
+        subtitle="160+ Edge Synced Articles from Turso LibSQL, VST Deals, Freeware & Telegram Automation"
       />
       <main className="flex-1">
-        <NewsClient
+        <TursoNewsClient
           initialArticles={result.data || []}
           totalArticles={result.total || 0}
         />

@@ -15,6 +15,7 @@ import {
   Users,
   LifeBuoy,
   Newspaper,
+  BookOpen,
   ExternalLink,
   LogOut,
 } from 'lucide-react'
@@ -81,9 +82,15 @@ const NAV_ITEMS = [
     badge: '2 Open',
   },
   {
-    label: 'News & Editorial',
+    label: 'Audio News (Turso)',
     href: '/news',
     icon: Newspaper,
+    badge: '160+',
+  },
+  {
+    label: 'Editorial Blogs',
+    href: '/blogs',
+    icon: BookOpen,
     badge: '12',
   },
   {

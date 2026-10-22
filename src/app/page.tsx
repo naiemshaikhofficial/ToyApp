@@ -15,6 +15,7 @@ import {
   LifeBuoy,
   Users,
   Newspaper,
+  BookOpen,
   Code2,
   Flame,
   ArrowDownRight,
@@ -323,7 +324,7 @@ export default async function AdminDashboardPage() {
               </a>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 font-mono">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono">
               <div className="p-3 rounded-lg bg-[#181818] border border-[#2a2a2a]">
                 <div className="text-[10px] text-zinc-500 uppercase">Catalog Items</div>
                 <div className="text-xl font-bold text-white mt-1">
@@ -331,7 +332,7 @@ export default async function AdminDashboardPage() {
                   <span className="text-xs text-zinc-500 font-normal">/ {stats?.totalProducts || 0}</span>
                 </div>
                 <Link href="/products" className="text-[10px] text-zinc-400 hover:text-white underline mt-0.5 block">
-                  Manage Catalog &rarr;
+                  Catalog &rarr;
                 </Link>
               </div>
 
@@ -339,18 +340,28 @@ export default async function AdminDashboardPage() {
                 <div className="text-[10px] text-zinc-500 uppercase">Customer Accounts</div>
                 <div className="text-xl font-bold text-white mt-1">{stats?.totalCustomers || 0}</div>
                 <Link href="/users" className="text-[10px] text-zinc-400 hover:text-white underline mt-0.5 block">
-                  Customer Directory &rarr;
+                  Directory &rarr;
                 </Link>
               </div>
 
               <div className="p-3 rounded-lg bg-[#181818] border border-[#2a2a2a]">
-                <div className="text-[10px] text-zinc-500 uppercase">Editorial Articles</div>
+                <div className="text-[10px] text-zinc-500 uppercase">Audio News (Turso)</div>
+                <div className="text-xl font-bold text-white mt-1">
+                  {stats?.totalTursoNews || 160}+
+                </div>
+                <Link href="/news" className="text-[10px] text-zinc-400 hover:text-white underline mt-0.5 block">
+                  Deals Engine &rarr;
+                </Link>
+              </div>
+
+              <div className="p-3 rounded-lg bg-[#181818] border border-[#2a2a2a]">
+                <div className="text-[10px] text-zinc-500 uppercase">Blogs (Supabase)</div>
                 <div className="text-xl font-bold text-white mt-1">
                   {stats?.publishedArticles || 0}{' '}
                   <span className="text-xs text-zinc-500 font-normal">/ {stats?.totalArticles || 0}</span>
                 </div>
-                <Link href="/news" className="text-[10px] text-zinc-400 hover:text-white underline mt-0.5 block">
-                  Editorial Deals &rarr;
+                <Link href="/blogs" className="text-[10px] text-zinc-400 hover:text-white underline mt-0.5 block">
+                  Tutorials &rarr;
                 </Link>
               </div>
             </div>
@@ -600,8 +611,19 @@ export default async function AdminDashboardPage() {
             >
               <Newspaper className="w-4 h-4 text-zinc-400 group-hover:text-white transition" />
               <div className="mt-3">
-                <div className="font-bold text-white">Editorial Hub</div>
-                <div className="text-[10px] text-zinc-500">Deals & Blogs</div>
+                <div className="font-bold text-white">Audio News</div>
+                <div className="text-[10px] text-zinc-500">Turso (160+ Deals)</div>
+              </div>
+            </Link>
+
+            <Link
+              href="/blogs"
+              className="p-3.5 rounded-lg bg-[#181818] border border-[#2a2a2a] hover:border-white transition flex flex-col justify-between group"
+            >
+              <BookOpen className="w-4 h-4 text-zinc-400 group-hover:text-white transition" />
+              <div className="mt-3">
+                <div className="font-bold text-white">Editorial Blogs</div>
+                <div className="text-[10px] text-zinc-500">Supabase (12 Posts)</div>
               </div>
             </Link>
 
