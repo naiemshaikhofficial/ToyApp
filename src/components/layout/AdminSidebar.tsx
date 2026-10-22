@@ -91,36 +91,28 @@ export function AdminSidebar({ currentStaffRole = 'super_admin', currentStaffNam
 
   return (
     <aside className="w-64 bg-[#181818] border-r border-[#2a2a2a] flex flex-col shrink-0 min-h-screen sticky top-0 h-screen overflow-y-auto z-40">
-      {/* Brand Header with 3D Logo & Mascot */}
-      <div className="p-4 border-b border-[#2a2a2a] flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="relative w-9 h-9 rounded-lg overflow-hidden shrink-0 border border-[#2a2a2a] bg-[#121212]">
-            <Image
-              src="/Manager Bear Dashboard Mascot.png"
-              alt="Manager Bear Mascot"
-              width={36}
-              height={36}
-              className="object-cover w-full h-full"
-            />
-          </div>
+      {/* Brand Header */}
+      <div className="h-16 px-5 flex items-center justify-between border-b border-[#242424] bg-[#141414]">
+        <Link href="/" className="flex items-center gap-3 group">
+          <Image
+            src="/Manager Bear Dashboard Mascot.png"
+            alt="Toy App Mascot"
+            width={38}
+            height={38}
+            className="w-9 h-9 object-contain filter drop-shadow-sm group-hover:scale-105 transition-transform shrink-0"
+            priority
+          />
           <div className="flex flex-col">
-            <div className="relative h-6 w-28">
-              <Image
-                src="/Producer Toy Charcoal 3D Logo.webp"
-                alt="ProducerToy"
-                fill
-                className="object-contain object-left group-hover:brightness-110 transition"
-                priority
-              />
+            <div className="flex items-center gap-1.5">
+              <span className="font-extrabold text-sm tracking-tight text-white uppercase">
+                Toy App
+              </span>
             </div>
-            <span className="text-[10px] font-mono font-bold tracking-widest uppercase text-zinc-400">
-              TOY APP
+            <span className="text-[10px] font-semibold text-zinc-400 tracking-wider uppercase font-mono">
+              by ProducerToy
             </span>
           </div>
         </Link>
-        <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold bg-[#2a2a2a] text-zinc-300 rounded border border-[#383838]">
-          v2.0
-        </span>
       </div>
 
       {/* Navigation List */}
@@ -194,15 +186,13 @@ export function AdminSidebar({ currentStaffRole = 'super_admin', currentStaffNam
       {/* Staff Profile Box with Manager Mascot Thumbnail */}
       <div className="p-3 border-t border-[#2a2a2a] bg-[#141414]">
         <div className="flex items-center gap-3 p-2 rounded-md bg-[#181818] border border-[#2a2a2a]">
-          <div className="relative w-8 h-8 rounded-full overflow-hidden shrink-0 border border-[#2a2a2a]">
-            <Image
-              src="/Manager Bear Dashboard Mascot.png"
-              alt="Staff Avatar"
-              width={32}
-              height={32}
-              className="object-cover w-full h-full"
-            />
-          </div>
+          <Image
+            src="/Manager Bear Dashboard Mascot.png"
+            alt="Staff Avatar"
+            width={32}
+            height={32}
+            className="w-8 h-8 object-contain shrink-0"
+          />
           <div className="flex-1 min-w-0">
             <div className="text-xs font-semibold text-white truncate">{currentStaffName}</div>
             <div className="flex items-center gap-1.5 mt-0.5">
