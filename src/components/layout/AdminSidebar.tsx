@@ -14,6 +14,7 @@ import {
   Users2,
   Users,
   LifeBuoy,
+  Newspaper,
   ExternalLink,
   LogOut,
 } from 'lucide-react'
@@ -78,6 +79,12 @@ const NAV_ITEMS = [
     href: '/support',
     icon: LifeBuoy,
     badge: '2 Open',
+  },
+  {
+    label: 'News & Editorial',
+    href: '/news',
+    icon: Newspaper,
+    badge: '12',
   },
   {
     label: 'Staff Base Roles',

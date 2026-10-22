@@ -289,6 +289,7 @@ export function StaffClient({ initialStaff, initialLogs }: StaffClientProps) {
                 className="epic-input mt-1 font-mono text-xs"
               >
                 <option value="catalog_manager">Catalog & Brand Manager</option>
+                <option value="editorial_team">Editorial & News Director</option>
                 <option value="finance_manager">Orders & Finance Director</option>
                 <option value="support_agent">Support & Licensing Specialist</option>
                 <option value="super_admin">Super Administrator</option>
@@ -332,6 +333,7 @@ export function StaffClient({ initialStaff, initialLogs }: StaffClientProps) {
                 className="epic-input mt-1 font-mono text-xs"
               >
                 <option value="catalog_manager">Catalog & Brand Manager</option>
+                <option value="editorial_team">Editorial & News Director</option>
                 <option value="finance_manager">Orders & Finance Director</option>
                 <option value="support_agent">Support & Licensing Specialist</option>
                 <option value="super_admin">Super Administrator</option>

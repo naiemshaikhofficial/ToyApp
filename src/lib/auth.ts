@@ -1,6 +1,11 @@
 import { getAdminClient } from '@/lib/supabase/admin'
 
-export type StaffRole = 'super_admin' | 'catalog_manager' | 'finance_manager' | 'support_agent'
+export type StaffRole =
+  | 'super_admin'
+  | 'catalog_manager'
+  | 'finance_manager'
+  | 'support_agent'
+  | 'editorial_team'
 
 export interface StaffMember {
   id: string
@@ -36,6 +41,11 @@ export const ROLE_DEFINITIONS: Record<StaffRole, { title: string; description: s
     title: 'Support & Licensing Specialist',
     description: 'Hardware workstation seat revocations, customer order verification, and inquiry resolution.',
     badgeColor: 'bg-[#181818] text-zinc-300 border-[#2a2a2a]',
+  },
+  editorial_team: {
+    title: 'Editorial & News Director',
+    description: 'Publish plugin sales deals, audio production guides, product reviews, and featured store campaigns.',
+    badgeColor: 'bg-[#242424] text-white border-[#383838]',
   },
 }
 
