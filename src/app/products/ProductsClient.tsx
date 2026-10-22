@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState, useTransition } from 'react'
+import React, { useState, useTransition, useEffect } from 'react'
 import Image from 'next/image'
+import { useSearchParams } from 'next/navigation'
 import {
   Package,
   Search,
@@ -34,11 +35,20 @@ interface ProductsClientProps {
 }
 
 export function ProductsClient({ initialProducts, totalProducts, brands }: ProductsClientProps) {
+  const searchParams = useSearchParams()
+  const typeParam = searchParams.get('type')
+
   const [products, setProducts] = useState<any[]>(initialProducts)
   const [search, setSearch] = useState('')
   const [selectedBrandFilter, setSelectedBrandFilter] = useState('')
-  const [selectedTypeFilter, setSelectedTypeFilter] = useState('')
+  const [selectedTypeFilter, setSelectedTypeFilter] = useState(() => typeParam || '')
   const [isPending, startTransition] = useTransition()
+
+  useEffect(() => {
+    if (typeParam) {
+      setSelectedTypeFilter(typeParam)
+    }
+  }, [typeParam])
 
   // Audio Player Preview
   const [playingAudioUrl, setPlayingAudioUrl] = useState<string | null>(null)

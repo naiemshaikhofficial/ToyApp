@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { getAdminProductsAction } from '@/actions/productActions'
 import { getBrandsAction } from '@/actions/brandActions'
 import { ProductsClient } from './ProductsClient'
@@ -18,11 +19,13 @@ export default async function ProductsPage() {
         subtitle="Manage VST/AU/AAX Plugins, Sample Packs, Sound Banks, Activation Seats & Installers"
       />
       <main className="p-8 flex-1">
-        <ProductsClient
-          initialProducts={productRes.products || []}
-          totalProducts={productRes.total || 0}
-          brands={brandRes.data || []}
-        />
+        <Suspense fallback={<div className="p-8 text-xs text-zinc-500">Loading catalog...</div>}>
+          <ProductsClient
+            initialProducts={productRes.products || []}
+            totalProducts={productRes.total || 0}
+            brands={brandRes.data || []}
+          />
+        </Suspense>
       </main>
     </div>
   )

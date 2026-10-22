@@ -33,6 +33,10 @@ import {
   Settings,
   CreditCard,
   Globe,
+  Disc,
+  Music,
+  CheckCircle,
+  RotateCcw,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -78,12 +82,7 @@ const SECTIONS: SectionConfig[] = [
     icon: LayoutDashboard,
     defaultHref: '/',
     headerTitle: 'Command Center',
-    subItems: [
-      { label: 'Executive Dashboard', href: '/', icon: LayoutDashboard },
-      { label: 'Live Sales & Charts', href: '/#charts', icon: Activity },
-      { label: 'Recent Orders', href: '/orders', icon: Receipt },
-      { label: 'Live Activity Feed', href: '/#feed', icon: Activity },
-    ],
+    subItems: [],
   },
   {
     id: 'brands',
@@ -104,11 +103,10 @@ const SECTIONS: SectionConfig[] = [
     defaultHref: '/products',
     headerTitle: 'Product Catalog',
     subItems: [
-      { label: 'All Products', href: '/products', icon: Package },
+      { label: 'All Products', href: '/products', icon: Package, badge: 'Live' },
+      { label: 'Audio Plugins', href: '/products?type=plugin', icon: Disc, badge: 'VST3/AU' },
+      { label: 'Sample Packs', href: '/products?type=sample_pack', icon: Music, badge: 'WAV' },
       { label: 'Add Product', href: '/products?action=new', icon: PlusCircle, isAction: true },
-      { label: 'Audio Assets & Stems', href: '/products', icon: DownloadCloud },
-      { label: 'Categories & Tags', href: '/products', icon: Tag },
-      { label: 'Customer Reviews', href: '/products', icon: Star },
     ],
   },
   {
@@ -119,8 +117,9 @@ const SECTIONS: SectionConfig[] = [
     headerTitle: 'Sales & Orders',
     subItems: [
       { label: 'All Orders', href: '/orders', icon: Receipt, badge: 'Live' },
-      { label: 'Customer Invoices', href: '/invoices', icon: FileSpreadsheet },
-      { label: 'Customer Purchases', href: '/orders', icon: Receipt },
+      { label: 'Completed Sales', href: '/orders?status=completed', icon: CheckCircle },
+      { label: 'Refunds & Issues', href: '/orders?status=refunded', icon: RotateCcw, badge: 'Manage' },
+      { label: 'Invoices & Receipts', href: '/invoices', icon: FileSpreadsheet },
     ],
   },
   {
@@ -220,13 +219,17 @@ export function AdminSidebar({
 
   const [activeSection, setActiveSection] = useState<NavSectionId>(() => detectSection(pathname))
   const [isHovered, setIsHovered] = useState(false)
-  const [isPinned, setIsPinned] = useState(true) // Open by default
+  const [isPinned, setIsPinned] = useState(() => detectSection(pathname) !== 'overview')
   const [searchQuery, setSearchQuery] = useState('')
 
   const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    setActiveSection(detectSection(pathname))
+    const sec = detectSection(pathname)
+    setActiveSection(sec)
+    if (sec === 'overview') {
+      setIsPinned(false)
+    }
   }, [pathname])
 
   const handleMouseEnter = () => {
@@ -266,7 +269,8 @@ export function AdminSidebar({
     )
   }, [currentConfig, searchQuery])
 
-  const isPanelVisible = isPinned || isHovered
+  const isOverview = activeSection === 'overview'
+  const isPanelVisible = !isOverview && (isPinned || isHovered)
 
   const handleItemClick = (item: SubMenuItem) => {
     if (item.href.includes('action=new') && pathname === '/brands') {
@@ -279,7 +283,7 @@ export function AdminSidebar({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={`relative shrink-0 min-h-screen sticky top-0 h-screen z-40 select-none flex transition-[width] duration-200 ease-out ${
-        isPinned ? 'w-[316px]' : 'w-[56px]'
+        !isOverview && isPinned ? 'w-[316px]' : 'w-[56px]'
       }`}
     >
       {/* =========================================================================
@@ -293,7 +297,7 @@ export function AdminSidebar({
             title="Toy App Home"
             onClick={() => {
               setActiveSection('overview')
-              setIsPinned(true)
+              setIsPinned(false)
             }}
             className="w-9 h-9 flex items-center justify-center hover:opacity-85 transition"
           >
@@ -322,10 +326,14 @@ export function AdminSidebar({
                   href={sec.defaultHref}
                   onClick={() => {
                     setActiveSection(sec.id)
-                    setIsPinned(true) // Stays open when clicked
+                    if (sec.id === 'overview') {
+                      setIsPinned(false)
+                    } else {
+                      setIsPinned(true) // Stays open when clicked
+                    }
                   }}
                   onMouseEnter={() => {
-                    if (!isPinned) {
+                    if (!isPinned && sec.id !== 'overview') {
                       setActiveSection(sec.id)
                     }
                   }}
@@ -392,17 +400,18 @@ export function AdminSidebar({
       </div>
 
       {/* =========================================================================
-          TIER 2: Sub-Panel (260px) - Spacious, clear, prominent text
+          TIER 2: Sub-Panel (260px) - Hidden when on overview
          ========================================================================= */}
-      <div
-        className={`w-[260px] bg-[#141414] border-r border-[#262626] flex flex-col shrink-0 h-screen overflow-hidden transition-all duration-200 ease-out ${
-          isPinned
-            ? 'relative opacity-100 translate-x-0'
-            : isHovered
-            ? 'absolute left-[56px] top-0 bottom-0 z-30 shadow-[12px_0_35px_rgba(0,0,0,0.8)] opacity-100 translate-x-0'
-            : 'absolute left-[56px] top-0 bottom-0 z-30 opacity-0 -translate-x-3 pointer-events-none'
-        }`}
-      >
+      {!isOverview && currentConfig.subItems.length > 0 && (
+        <div
+          className={`w-[260px] bg-[#141414] border-r border-[#262626] flex flex-col shrink-0 h-screen overflow-hidden transition-all duration-200 ease-out ${
+            isPinned
+              ? 'relative opacity-100 translate-x-0'
+              : isHovered
+              ? 'absolute left-[56px] top-0 bottom-0 z-30 shadow-[12px_0_35px_rgba(0,0,0,0.8)] opacity-100 translate-x-0'
+              : 'absolute left-[56px] top-0 bottom-0 z-30 opacity-0 -translate-x-3 pointer-events-none'
+          }`}
+        >
         {/* Header Title */}
         <div className="h-14 px-4 flex items-center justify-between border-b border-[#242424] bg-[#121212]">
           <div className="flex items-center gap-2.5">
@@ -511,6 +520,7 @@ export function AdminSidebar({
           <span className="text-zinc-400 capitalize">{currentStaffRole.replace('_', ' ')}</span>
         </div>
       </div>
-    </aside>
-  )
+    )}
+  </aside>
+)
 }

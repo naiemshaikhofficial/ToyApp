@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState, useTransition } from 'react'
+import React, { useState, useTransition, useEffect } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import {
   Receipt,
   Search,
@@ -25,10 +26,19 @@ interface OrdersClientProps {
 }
 
 export function OrdersClient({ initialOrders, totalOrders }: OrdersClientProps) {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const statusParam = searchParams.get('status') || 'all'
+
   const [orders, setOrders] = useState<any[]>(initialOrders)
   const [search, setSearch] = useState('')
   const [currencyFilter, setCurrencyFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState(statusParam)
   const [isPending, startTransition] = useTransition()
+
+  useEffect(() => {
+    if (statusParam) setStatusFilter(statusParam)
+  }, [statusParam])
 
   // Selected Order for Modal
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null)
@@ -41,6 +51,12 @@ export function OrdersClient({ initialOrders, totalOrders }: OrdersClientProps) 
 
   // Filtered orders
   const filteredOrders = orders.filter((o) => {
+    if (statusFilter === 'completed' && (o.is_refunded || o.status === 'refunded')) {
+      return false
+    }
+    if (statusFilter === 'refunded' && !(o.is_refunded || o.status === 'refunded')) {
+      return false
+    }
     if (search.trim()) {
       const s = search.toLowerCase()
       const match =
@@ -115,6 +131,63 @@ export function OrdersClient({ initialOrders, totalOrders }: OrdersClientProps) 
           </button>
         </div>
       )}
+
+      {/* Category Status Tabs */}
+      <div className="flex items-center gap-2 border-b border-[#242424] pb-2 text-xs font-medium">
+        <button
+          onClick={() => {
+            setStatusFilter('all')
+            router.replace('/orders')
+          }}
+          className={`px-3 py-1.5 rounded-lg transition flex items-center gap-2 ${
+            statusFilter === 'all'
+              ? 'bg-white text-black font-semibold'
+              : 'text-zinc-400 hover:text-white hover:bg-[#1a1a1a]'
+          }`}
+        >
+          <Receipt className="w-3.5 h-3.5" />
+          <span>All Orders</span>
+          <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-black/10 dark:bg-white/20">
+            {orders.length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => {
+            setStatusFilter('completed')
+            router.replace('/orders?status=completed')
+          }}
+          className={`px-3 py-1.5 rounded-lg transition flex items-center gap-2 ${
+            statusFilter === 'completed'
+              ? 'bg-white text-black font-semibold'
+              : 'text-zinc-400 hover:text-white hover:bg-[#1a1a1a]'
+          }`}
+        >
+          <CheckCircle className="w-3.5 h-3.5" />
+          <span>Completed Sales</span>
+          <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-black/10 dark:bg-white/20">
+            {orders.filter((o) => !o.is_refunded && o.status !== 'refunded').length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => {
+            setStatusFilter('refunded')
+            router.replace('/orders?status=refunded')
+          }}
+          className={`px-3 py-1.5 rounded-lg transition flex items-center gap-2 ${
+            statusFilter === 'refunded'
+              ? 'bg-white text-black font-semibold'
+              : 'text-zinc-400 hover:text-white hover:bg-[#1a1a1a]'
+          }`}
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          <span>Refunds & Issues</span>
+          <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-black/10 dark:bg-white/20">
+            {orders.filter((o) => o.is_refunded || o.status === 'refunded').length}
+          </span>
+        </button>
+      </div>
 
       {/* Control Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
