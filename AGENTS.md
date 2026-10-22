@@ -22,3 +22,9 @@
 ## 4. Resilient PostgREST Data Correlation
 - Never use embedded joins like `.select('*, purchases(...)')` on tables without explicit foreign key relationships in Supabase.
 - Always query base tables and correlate secondary records in memory using `.in('user_id', ids)`.
+
+## 5. Unified Ecosystem Orchestration Architecture
+- **Toy App (`app.producertoy.com`)** is the central command center for BOTH platforms:
+  - **ProducerToy Storefront (`producertoy.com`)**: Purchases, customer profiles, catalog distribution, editorial news, and DRM seat verification.
+  - **Toy Creator Portal (`creators.producertoy.com`)**: Audio brand partners, 70/30 revenue share economics, creator payouts, license serial pools, and developer priority escalations.
+- **Toy Overview (`/`)** must always present the live operational pulse of both platforms, 70/30 economics, action-required escalation queues, dual-ecosystem gauges, and multi-channel live event streams.
