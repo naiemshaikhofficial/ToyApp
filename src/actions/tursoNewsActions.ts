@@ -3,6 +3,7 @@
 import { getTursoClient } from '@/lib/turso/client'
 import { logAdminActivity } from '@/lib/audit'
 import { revalidatePath } from 'next/cache'
+import { requireAuthenticatedStaff } from '@/lib/auth'
 
 export interface TursoNewsArticle {
   id: string
@@ -35,6 +36,7 @@ export async function getTursoNewsAction(params?: {
   featuredOnly?: boolean
 }) {
   try {
+    await requireAuthenticatedStaff('news')
     const client = getTursoClient()
     const page = params?.page || 1
     const pageSize = params?.pageSize || 20
@@ -113,9 +115,11 @@ export async function getTursoNewsAction(params?: {
 export async function toggleTursoNewsFeaturedAction(
   articleId: string,
   currentFeatured: number,
-  staffEmail: string
+  staffEmail?: string
 ) {
   try {
+    const staff = await requireAuthenticatedStaff('news')
+    const effectiveStaffEmail = staff.email || staffEmail || 'staff@producertoy.com'
     const client = getTursoClient()
     const nextVal = currentFeatured === 1 ? 0 : 1
 
@@ -125,7 +129,7 @@ export async function toggleTursoNewsFeaturedAction(
     })
 
     await logAdminActivity({
-      staff_email: staffEmail,
+      staff_email: effectiveStaffEmail,
       action: nextVal === 1 ? 'TURSO_NEWS_FEATURED' : 'TURSO_NEWS_UNFEATURED',
       target_type: 'system',
       target_id: articleId,
@@ -138,8 +142,10 @@ export async function toggleTursoNewsFeaturedAction(
   }
 }
 
-export async function deleteTursoNewsAction(articleId: string, staffEmail: string) {
+export async function deleteTursoNewsAction(articleId: string, staffEmail?: string) {
   try {
+    const staff = await requireAuthenticatedStaff('news')
+    const effectiveStaffEmail = staff.email || staffEmail || 'staff@producertoy.com'
     const client = getTursoClient()
 
     await client.execute({
@@ -148,7 +154,7 @@ export async function deleteTursoNewsAction(articleId: string, staffEmail: strin
     })
 
     await logAdminActivity({
-      staff_email: staffEmail,
+      staff_email: effectiveStaffEmail,
       action: 'TURSO_NEWS_DELETED',
       target_type: 'system',
       target_id: articleId,
@@ -175,9 +181,11 @@ export async function createTursoNewsAction(data: {
   source_url?: string
   reading_time?: string
   is_featured?: number
-  staffEmail: string
+  staffEmail?: string
 }) {
   try {
+    const staff = await requireAuthenticatedStaff('news')
+    const effectiveStaffEmail = staff.email || data.staffEmail || 'staff@producertoy.com'
     const client = getTursoClient()
     const id = `news_${Date.now().toString(36)}`
     const rawSlug =
@@ -221,7 +229,7 @@ export async function createTursoNewsAction(data: {
     })
 
     await logAdminActivity({
-      staff_email: data.staffEmail,
+      staff_email: effectiveStaffEmail,
       action: 'TURSO_NEWS_CREATED',
       target_type: 'system',
       target_id: id,
@@ -235,19 +243,28 @@ export async function createTursoNewsAction(data: {
   }
 }
 
-export async function triggerTursoNewsSyncAction(staffEmail: string) {
+export async function triggerTursoNewsSyncAction(staffEmail?: string) {
   try {
-    // Ping storefront API sync route
+    const staff = await requireAuthenticatedStaff('news')
+    const effectiveStaffEmail = staff.email || staffEmail || 'staff@producertoy.com'
+
+    // Ping storefront API sync route with CRON_SECRET authorization
+    const cronSecret = process.env.CRON_SECRET || ''
+    const headers: Record<string, string> = {
+      'User-Agent': 'ToyApp-Executive-Engine/1.0',
+    }
+    if (cronSecret) {
+      headers['Authorization'] = `Bearer ${cronSecret}`
+    }
+
     const res = await fetch('https://producertoy.com/api/news/sync', {
       method: 'GET',
-      headers: {
-        'User-Agent': 'ToyApp-Executive-Engine/1.0',
-      },
+      headers,
       cache: 'no-store',
     })
 
     await logAdminActivity({
-      staff_email: staffEmail,
+      staff_email: effectiveStaffEmail,
       action: 'TURSO_NEWS_SYNC_TRIGGERED',
       target_type: 'system',
       target_id: 'news_sync_engine',

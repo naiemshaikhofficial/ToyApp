@@ -3,6 +3,7 @@
 import { getAdminClient } from '@/lib/supabase/admin'
 import { logAdminActivity } from '@/lib/audit'
 import { revalidatePath } from 'next/cache'
+import { requireAuthenticatedStaff } from '@/lib/auth'
 
 export interface ArticleSummary {
   id: string
@@ -32,6 +33,7 @@ export async function getArticlesAction(params?: {
   pageSize?: number
 }) {
   try {
+    await requireAuthenticatedStaff('news')
     const supabase = getAdminClient()
     const page = params?.page || 1
     const pageSize = params?.pageSize || 15
@@ -84,9 +86,11 @@ export async function createArticleAction(data: {
   read_time?: string
   is_published?: boolean
   is_featured?: boolean
-  staffEmail: string
+  staffEmail?: string
 }) {
   try {
+    const staff = await requireAuthenticatedStaff('news')
+    const effectiveStaffEmail = staff.email || data.staffEmail || 'staff@producertoy.com'
     const supabase = getAdminClient()
 
     const rawSlug = data.slug?.trim() || data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
@@ -118,7 +122,7 @@ export async function createArticleAction(data: {
     if (error) throw new Error(error.message)
 
     await logAdminActivity({
-      staff_email: data.staffEmail,
+      staff_email: effectiveStaffEmail,
       action: 'ARTICLE_CREATED',
       target_type: 'system',
       target_id: newArticle.id,
@@ -146,9 +150,11 @@ export async function updateArticleAction(data: {
   read_time?: string
   is_published: boolean
   is_featured: boolean
-  staffEmail: string
+  staffEmail?: string
 }) {
   try {
+    const staff = await requireAuthenticatedStaff('news')
+    const effectiveStaffEmail = staff.email || data.staffEmail || 'staff@producertoy.com'
     const supabase = getAdminClient()
 
     const { error } = await supabase
@@ -174,7 +180,7 @@ export async function updateArticleAction(data: {
     if (error) throw new Error(error.message)
 
     await logAdminActivity({
-      staff_email: data.staffEmail,
+      staff_email: effectiveStaffEmail,
       action: 'ARTICLE_UPDATED',
       target_type: 'system',
       target_id: data.id,
@@ -191,9 +197,11 @@ export async function updateArticleAction(data: {
 export async function toggleArticlePublishAction(
   articleId: string,
   currentStatus: boolean,
-  staffEmail: string
+  staffEmail?: string
 ) {
   try {
+    const staff = await requireAuthenticatedStaff('news')
+    const effectiveStaffEmail = staff.email || staffEmail || 'staff@producertoy.com'
     const supabase = getAdminClient()
     const newStatus = !currentStatus
 
@@ -209,7 +217,7 @@ export async function toggleArticlePublishAction(
     if (error) throw new Error(error.message)
 
     await logAdminActivity({
-      staff_email: staffEmail,
+      staff_email: effectiveStaffEmail,
       action: newStatus ? 'ARTICLE_PUBLISHED' : 'ARTICLE_UNPUBLISHED',
       target_type: 'system',
       target_id: articleId,
@@ -225,9 +233,11 @@ export async function toggleArticlePublishAction(
 export async function toggleArticleFeaturedAction(
   articleId: string,
   currentStatus: boolean,
-  staffEmail: string
+  staffEmail?: string
 ) {
   try {
+    const staff = await requireAuthenticatedStaff('news')
+    const effectiveStaffEmail = staff.email || staffEmail || 'staff@producertoy.com'
     const supabase = getAdminClient()
     const newFeatured = !currentStatus
 
@@ -242,7 +252,7 @@ export async function toggleArticleFeaturedAction(
     if (error) throw new Error(error.message)
 
     await logAdminActivity({
-      staff_email: staffEmail,
+      staff_email: effectiveStaffEmail,
       action: newFeatured ? 'ARTICLE_FEATURED' : 'ARTICLE_UNFEATURED',
       target_type: 'system',
       target_id: articleId,
@@ -255,15 +265,17 @@ export async function toggleArticleFeaturedAction(
   }
 }
 
-export async function deleteArticleAction(articleId: string, staffEmail: string) {
+export async function deleteArticleAction(articleId: string, staffEmail?: string) {
   try {
+    const staff = await requireAuthenticatedStaff('news')
+    const effectiveStaffEmail = staff.email || staffEmail || 'staff@producertoy.com'
     const supabase = getAdminClient()
 
     const { error } = await supabase.from('blogs').delete().eq('id', articleId)
     if (error) throw new Error(error.message)
 
     await logAdminActivity({
-      staff_email: staffEmail,
+      staff_email: effectiveStaffEmail,
       action: 'ARTICLE_DELETED',
       target_type: 'system',
       target_id: articleId,

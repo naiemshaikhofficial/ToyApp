@@ -3,9 +3,11 @@
 import { getAdminClient } from '@/lib/supabase/admin'
 import { logAdminActivity } from '@/lib/audit'
 import { revalidatePath } from 'next/cache'
+import { requireAuthenticatedStaff } from '@/lib/auth'
 
 export async function getAdminPayoutsAction() {
   try {
+    await requireAuthenticatedStaff('payouts')
     const supabase = getAdminClient()
     const { data: payouts, error } = await supabase
       .from('payouts')
@@ -24,6 +26,7 @@ export async function getAdminPayoutsAction() {
 
 export async function getSettlementOverviewAction() {
   try {
+    await requireAuthenticatedStaff('payouts')
     const supabase = getAdminClient()
 
     // 1. Fetch all purchases to aggregate sales volume
@@ -93,9 +96,11 @@ export async function updatePayoutStatusAction(formData: {
   newStatus: 'processing' | 'completed' | 'on_hold' | 'failed'
   transactionRef?: string
   notes?: string
-  staffEmail: string
+  staffEmail?: string
 }) {
   try {
+    const staff = await requireAuthenticatedStaff('payouts')
+    const effectiveStaffEmail = staff.email || formData.staffEmail || 'staff@producertoy.com'
     const supabase = getAdminClient()
 
     const updatePayload: any = {
@@ -116,7 +121,7 @@ export async function updatePayoutStatusAction(formData: {
     if (error) return { success: false, error: error.message }
 
     await logAdminActivity({
-      staff_email: formData.staffEmail,
+      staff_email: effectiveStaffEmail,
       action: 'PAYOUT_STATUS_CHANGED',
       target_type: 'payout',
       target_id: formData.payoutId,

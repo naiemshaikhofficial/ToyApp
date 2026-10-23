@@ -3,6 +3,7 @@
 import { getAdminClient } from '@/lib/supabase/admin'
 import { logAdminActivity } from '@/lib/audit'
 import { revalidatePath } from 'next/cache'
+import { requireAuthenticatedStaff } from '@/lib/auth'
 
 export async function getDeviceActivationsAction(params?: {
   search?: string
@@ -10,6 +11,7 @@ export async function getDeviceActivationsAction(params?: {
   pageSize?: number
 }) {
   try {
+    await requireAuthenticatedStaff('licenses')
     const supabase = getAdminClient()
     const page = params?.page || 1
     const pageSize = params?.pageSize || 30
@@ -37,8 +39,10 @@ export async function getDeviceActivationsAction(params?: {
   }
 }
 
-export async function revokeDeviceActivationAction(activationId: string, staffEmail: string) {
+export async function revokeDeviceActivationAction(activationId: string, staffEmail?: string) {
   try {
+    const staff = await requireAuthenticatedStaff('licenses')
+    const effectiveStaffEmail = staff.email || staffEmail || 'staff@producertoy.com'
     const supabase = getAdminClient()
     const { error } = await supabase
       .from('device_activations')
@@ -51,7 +55,7 @@ export async function revokeDeviceActivationAction(activationId: string, staffEm
     if (error) return { success: false, error: error.message }
 
     await logAdminActivity({
-      staff_email: staffEmail,
+      staff_email: effectiveStaffEmail,
       action: 'DEVICE_ACTIVATION_REVOKED',
       target_type: 'license',
       target_id: activationId,
@@ -66,6 +70,7 @@ export async function revokeDeviceActivationAction(activationId: string, staffEm
 
 export async function getSerialPoolInventoryAction() {
   try {
+    await requireAuthenticatedStaff('licenses')
     const supabase = getAdminClient()
 
     // Query products with serial count
@@ -105,9 +110,11 @@ export async function getSerialPoolInventoryAction() {
 export async function uploadSerialKeysAction(formData: {
   productId: string
   rawKeys: string
-  staffEmail: string
+  staffEmail?: string
 }) {
   try {
+    const staff = await requireAuthenticatedStaff('licenses')
+    const effectiveStaffEmail = staff.email || formData.staffEmail || 'staff@producertoy.com'
     const supabase = getAdminClient()
     const parsedKeys = formData.rawKeys
       .split(/[\r\n,]+/)
@@ -144,7 +151,7 @@ export async function uploadSerialKeysAction(formData: {
     if (insErr) return { success: false, error: insErr.message }
 
     await logAdminActivity({
-      staff_email: formData.staffEmail,
+      staff_email: effectiveStaffEmail,
       action: 'SERIALS_BATCH_UPLOADED',
       target_type: 'serial_pool',
       target_id: formData.productId,

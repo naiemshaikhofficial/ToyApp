@@ -3,6 +3,7 @@
 import { getAdminClient } from '@/lib/supabase/admin'
 import { logAdminActivity } from '@/lib/audit'
 import { revalidatePath } from 'next/cache'
+import { requireAuthenticatedStaff } from '@/lib/auth'
 
 export async function getBrandsAction(params?: {
   search?: string
@@ -11,6 +12,7 @@ export async function getBrandsAction(params?: {
   pageSize?: number
 }) {
   try {
+    await requireAuthenticatedStaff('brands')
     const supabase = getAdminClient()
     const page = params?.page || 1
     const pageSize = params?.pageSize || 30
@@ -42,6 +44,7 @@ export async function getBrandsAction(params?: {
 
 export async function getBrandByIdAction(brandId: string) {
   try {
+    await requireAuthenticatedStaff('brands')
     const supabase = getAdminClient()
     const { data: brand, error } = await supabase
       .from('brands')
@@ -79,9 +82,11 @@ export async function createBrandAction(formData: {
   country?: string
   logo_url?: string
   revenue_share_percent?: number
-  staff_email: string
+  staff_email?: string
 }) {
   try {
+    const staff = await requireAuthenticatedStaff('brands')
+    const effectiveStaffEmail = staff.email || formData.staff_email || 'staff@producertoy.com'
     const supabase = getAdminClient()
     const cleanSlug = formData.slug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/--+/g, '-')
 
@@ -107,7 +112,7 @@ export async function createBrandAction(formData: {
     }
 
     await logAdminActivity({
-      staff_email: formData.staff_email,
+      staff_email: effectiveStaffEmail,
       action: 'BRAND_CREATED',
       target_type: 'brand',
       target_id: data.id,
@@ -130,9 +135,11 @@ export async function updateBrandAction(formData: {
   support_email?: string
   country?: string
   logo_url?: string
-  staff_email: string
+  staff_email?: string
 }) {
   try {
+    const staff = await requireAuthenticatedStaff('brands')
+    const effectiveStaffEmail = staff.email || formData.staff_email || 'staff@producertoy.com'
     const supabase = getAdminClient()
     const { data, error } = await supabase
       .from('brands')
@@ -152,7 +159,7 @@ export async function updateBrandAction(formData: {
     if (error) return { success: false, error: error.message }
 
     await logAdminActivity({
-      staff_email: formData.staff_email,
+      staff_email: effectiveStaffEmail,
       action: 'BRAND_UPDATED',
       target_type: 'brand',
       target_id: formData.id,
@@ -169,9 +176,11 @@ export async function updateBrandAction(formData: {
 export async function updateBrandCommissionAction(formData: {
   brandId: string
   revenueSharePercent: number
-  staff_email: string
+  staff_email?: string
 }) {
   try {
+    const staff = await requireAuthenticatedStaff('brands')
+    const effectiveStaffEmail = staff.email || formData.staff_email || 'staff@producertoy.com'
     const supabase = getAdminClient()
     const { error } = await supabase
       .from('brand_members')
@@ -181,7 +190,7 @@ export async function updateBrandCommissionAction(formData: {
     if (error) return { success: false, error: error.message }
 
     await logAdminActivity({
-      staff_email: formData.staff_email,
+      staff_email: effectiveStaffEmail,
       action: 'BRAND_COMMISSION_UPDATED',
       target_type: 'brand',
       target_id: formData.brandId,
@@ -198,9 +207,11 @@ export async function updateBrandCommissionAction(formData: {
 export async function toggleBrandVerificationAction(formData: {
   brandId: string
   verify: boolean
-  staff_email: string
+  staff_email?: string
 }) {
   try {
+    const staff = await requireAuthenticatedStaff('brands')
+    const effectiveStaffEmail = staff.email || formData.staff_email || 'staff@producertoy.com'
     const supabase = getAdminClient()
     const { data, error } = await supabase
       .from('brands')
@@ -216,7 +227,7 @@ export async function toggleBrandVerificationAction(formData: {
     if (error) return { success: false, error: error.message }
 
     await logAdminActivity({
-      staff_email: formData.staff_email,
+      staff_email: effectiveStaffEmail,
       action: formData.verify ? 'BRAND_VERIFIED' : 'BRAND_VERIFICATION_REVOKED',
       target_type: 'brand',
       target_id: formData.brandId,

@@ -3,6 +3,7 @@
 import { getAdminClient } from '@/lib/supabase/admin'
 import { logAdminActivity } from '@/lib/audit'
 import { revalidatePath } from 'next/cache'
+import { requireAuthenticatedStaff } from '@/lib/auth'
 
 export interface UserSummary {
   id: string
@@ -30,6 +31,7 @@ export async function getUsersAction(params?: {
   pageSize?: number
 }) {
   try {
+    await requireAuthenticatedStaff('users')
     const supabase = getAdminClient()
     const page = params?.page || 1
     const pageSize = params?.pageSize || 20
@@ -110,6 +112,7 @@ export async function getUsersAction(params?: {
 
 export async function getUserDetailsAction(userId: string) {
   try {
+    await requireAuthenticatedStaff('users')
     const supabase = getAdminClient()
 
     // 1. Fetch Profile
@@ -188,6 +191,7 @@ export async function updateUserProfileAction(data: {
   staffEmail: string
 }) {
   try {
+    const staff = await requireAuthenticatedStaff('users')
     const supabase = getAdminClient()
 
     const { error } = await supabase
@@ -210,11 +214,11 @@ export async function updateUserProfileAction(data: {
     if (error) throw new Error(error.message)
 
     await logAdminActivity({
-      staff_email: data.staffEmail,
+      staff_email: staff.email,
       action: 'USER_PROFILE_UPDATED',
       target_type: 'staff',
       target_id: data.userId,
-      details: { updated_by: data.staffEmail },
+      details: { updated_by: staff.email },
     })
 
     revalidatePath('/users')

@@ -3,6 +3,7 @@
 import { getAdminClient } from '@/lib/supabase/admin'
 import { logAdminActivity } from '@/lib/audit'
 import { revalidatePath } from 'next/cache'
+import { requireAuthenticatedStaff } from '@/lib/auth'
 
 export interface AdminCoupon {
   id: string
@@ -28,6 +29,7 @@ export async function getAdminCouponsAction(params?: {
   isActive?: boolean
 }) {
   try {
+    await requireAuthenticatedStaff('products')
     const supabase = getAdminClient()
     let query = supabase
       .from('coupons')
@@ -68,9 +70,11 @@ export async function createAdminCouponAction(
     expiresAt?: string | null
     maxRedemptions?: number | null
   },
-  staffEmail: string
+  staffEmail?: string
 ) {
   try {
+    const staff = await requireAuthenticatedStaff('products')
+    const authorEmail = staff.email
     const supabase = getAdminClient()
     const cleanCode = (data.code || '').trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '')
 
@@ -121,7 +125,7 @@ export async function createAdminCouponAction(
     }
 
     await logAdminActivity({
-      staff_email: staffEmail,
+      staff_email: authorEmail,
       action: 'COUPON_CREATED',
       target_type: 'coupon',
       target_id: created.id,
@@ -138,9 +142,11 @@ export async function createAdminCouponAction(
 export async function toggleAdminCouponActiveAction(
   couponId: string,
   currentStatus: boolean,
-  staffEmail: string
+  staffEmail?: string
 ) {
   try {
+    const staff = await requireAuthenticatedStaff('products')
+    const authorEmail = staff.email
     const supabase = getAdminClient()
     const newStatus = !currentStatus
 
@@ -152,7 +158,7 @@ export async function toggleAdminCouponActiveAction(
     if (error) return { success: false, error: error.message }
 
     await logAdminActivity({
-      staff_email: staffEmail,
+      staff_email: authorEmail,
       action: newStatus ? 'COUPON_ACTIVATED' : 'COUPON_PAUSED',
       target_type: 'coupon',
       target_id: couponId,
@@ -166,15 +172,17 @@ export async function toggleAdminCouponActiveAction(
   }
 }
 
-export async function deleteAdminCouponAction(couponId: string, staffEmail: string) {
+export async function deleteAdminCouponAction(couponId: string, staffEmail?: string) {
   try {
+    const staff = await requireAuthenticatedStaff('products')
+    const authorEmail = staff.email
     const supabase = getAdminClient()
     const { error } = await supabase.from('coupons').delete().eq('id', couponId)
 
     if (error) return { success: false, error: error.message }
 
     await logAdminActivity({
-      staff_email: staffEmail,
+      staff_email: authorEmail,
       action: 'COUPON_DELETED',
       target_type: 'coupon',
       target_id: couponId,

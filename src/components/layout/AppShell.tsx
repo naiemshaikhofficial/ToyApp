@@ -1,11 +1,48 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { AdminSidebar } from '@/components/layout/AdminSidebar'
+import { createClient } from '@/lib/supabase/client'
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const [staffInfo, setStaffInfo] = useState<{ name: string; role: string }>({
+    name: 'Administrator',
+    role: 'super_admin',
+  })
+
+  useEffect(() => {
+    async function loadStaffProfile() {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: staff } = await supabase
+            .from('admin_staff')
+            .select('full_name, role')
+            .eq('email', user.email?.toLowerCase().trim() || '')
+            .maybeSingle()
+
+          if (staff) {
+            setStaffInfo({
+              name: staff.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Staff',
+              role: staff.role || 'super_admin',
+            })
+          } else {
+            setStaffInfo({
+              name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Staff Member',
+              role: 'super_admin',
+            })
+          }
+        }
+      } catch (e) {
+        console.warn('Error loading staff profile for sidebar:', e)
+      }
+    }
+    loadStaffProfile()
+  }, [])
+
   const isAuthPage =
     pathname === '/login' ||
     pathname === '/forgot-password' ||
@@ -18,7 +55,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen w-full bg-[#121212]">
       {/* Persistent Sticky Sidebar */}
-      <AdminSidebar currentStaffRole="super_admin" currentStaffName="Naiem Shaikh" />
+      <AdminSidebar currentStaffRole={staffInfo.role} currentStaffName={staffInfo.name} />
 
       {/* Primary Page Canvas */}
       <div className="flex-1 flex flex-col min-w-0 min-h-screen bg-[#121212]">

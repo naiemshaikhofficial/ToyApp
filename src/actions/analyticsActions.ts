@@ -2,6 +2,7 @@
 
 import { getAdminClient } from '@/lib/supabase/admin'
 import { getTursoClient } from '@/lib/turso/client'
+import { requireAuthenticatedStaff } from '@/lib/auth'
 
 export interface EcosystemOverviewData {
   stats: {
@@ -77,6 +78,7 @@ export async function getDashboardAnalyticsAction(): Promise<{
   data?: EcosystemOverviewData
 }> {
   try {
+    await requireAuthenticatedStaff('analytics')
     const supabase = getAdminClient()
 
     // 1. Fetch Parallel Counts

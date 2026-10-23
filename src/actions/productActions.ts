@@ -3,6 +3,7 @@
 import { getAdminClient } from '@/lib/supabase/admin'
 import { logAdminActivity } from '@/lib/audit'
 import { revalidatePath } from 'next/cache'
+import { requireAuthenticatedStaff } from '@/lib/auth'
 
 export async function getAdminProductsAction(params?: {
   search?: string
@@ -13,6 +14,7 @@ export async function getAdminProductsAction(params?: {
   pageSize?: number
 }) {
   try {
+    await requireAuthenticatedStaff('products')
     const supabase = getAdminClient()
     const page = params?.page || 1
     const pageSize = params?.pageSize || 25
@@ -53,6 +55,7 @@ export async function getAdminProductsAction(params?: {
 
 export async function getProductByIdAction(productId: string) {
   try {
+    await requireAuthenticatedStaff('products')
     const supabase = getAdminClient()
     const { data, error } = await supabase
       .from('products')
@@ -88,8 +91,10 @@ export async function getProductByIdAction(productId: string) {
   }
 }
 
-export async function toggleProductActiveAction(productId: string, currentStatus: boolean, staffEmail: string) {
+export async function toggleProductActiveAction(productId: string, currentStatus: boolean, staffEmail?: string) {
   try {
+    const staff = await requireAuthenticatedStaff('products')
+    const effectiveStaffEmail = staff.email || staffEmail || 'staff@producertoy.com'
     const supabase = getAdminClient()
     const newStatus = !currentStatus
     const { error } = await supabase
@@ -100,7 +105,7 @@ export async function toggleProductActiveAction(productId: string, currentStatus
     if (error) return { success: false, error: error.message }
 
     await logAdminActivity({
-      staff_email: staffEmail,
+      staff_email: effectiveStaffEmail,
       action: newStatus ? 'PRODUCT_PUBLISHED' : 'PRODUCT_UNPUBLISHED',
       target_type: 'product',
       target_id: productId,
@@ -114,8 +119,10 @@ export async function toggleProductActiveAction(productId: string, currentStatus
   }
 }
 
-export async function toggleProductFeaturedAction(productId: string, currentFeatured: boolean, staffEmail: string) {
+export async function toggleProductFeaturedAction(productId: string, currentFeatured: boolean, staffEmail?: string) {
   try {
+    const staff = await requireAuthenticatedStaff('products')
+    const effectiveStaffEmail = staff.email || staffEmail || 'staff@producertoy.com'
     const supabase = getAdminClient()
     const newFeatured = !currentFeatured
     const { error } = await supabase
@@ -126,7 +133,7 @@ export async function toggleProductFeaturedAction(productId: string, currentFeat
     if (error) return { success: false, error: error.message }
 
     await logAdminActivity({
-      staff_email: staffEmail,
+      staff_email: effectiveStaffEmail,
       action: newFeatured ? 'PRODUCT_FEATURED' : 'PRODUCT_UNFEATURED',
       target_type: 'product',
       target_id: productId,
@@ -140,8 +147,10 @@ export async function toggleProductFeaturedAction(productId: string, currentFeat
   }
 }
 
-export async function upsertAdminProductAction(productData: any, staffEmail: string) {
+export async function upsertAdminProductAction(productData: any, staffEmail?: string) {
   try {
+    const staff = await requireAuthenticatedStaff('products')
+    const effectiveStaffEmail = staff.email || staffEmail || 'staff@producertoy.com'
     const supabase = getAdminClient()
     const isNew = !productData.id
 
@@ -183,7 +192,7 @@ export async function upsertAdminProductAction(productData: any, staffEmail: str
     if (result.error) return { success: false, error: result.error.message }
 
     await logAdminActivity({
-      staff_email: staffEmail,
+      staff_email: effectiveStaffEmail,
       action: isNew ? 'PRODUCT_CREATED' : 'PRODUCT_UPDATED',
       target_type: 'product',
       target_id: result.data.id,

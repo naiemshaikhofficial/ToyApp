@@ -3,6 +3,7 @@
 import { getAdminClient } from '@/lib/supabase/admin'
 import { logAdminActivity } from '@/lib/audit'
 import { revalidatePath } from 'next/cache'
+import { requireAuthenticatedStaff } from '@/lib/auth'
 
 export async function getAdminOrdersAction(params?: {
   search?: string
@@ -12,6 +13,7 @@ export async function getAdminOrdersAction(params?: {
   pageSize?: number
 }) {
   try {
+    await requireAuthenticatedStaff('orders')
     const supabase = getAdminClient()
     const page = params?.page || 1
     const pageSize = params?.pageSize || 25
@@ -47,6 +49,7 @@ export async function getAdminOrdersAction(params?: {
 
 export async function getOrderByIdAction(purchaseId: string) {
   try {
+    await requireAuthenticatedStaff('orders')
     const supabase = getAdminClient()
     const { data: purchase, error } = await supabase
       .from('purchases')
@@ -66,9 +69,11 @@ export async function refundOrderAction(formData: {
   purchaseId: string
   reason: string
   revokeLicense: boolean
-  staffEmail: string
+  staffEmail?: string
 }) {
   try {
+    const staff = await requireAuthenticatedStaff('orders')
+    const effectiveStaffEmail = staff.email || formData.staffEmail || 'staff@producertoy.com'
     const supabase = getAdminClient()
 
     // 1. Get purchase info
@@ -98,7 +103,7 @@ export async function refundOrderAction(formData: {
 
     // 3. Log admin activity
     await logAdminActivity({
-      staff_email: formData.staffEmail,
+      staff_email: effectiveStaffEmail,
       action: 'ORDER_REFUND_PROCESSED',
       target_type: 'order',
       target_id: formData.purchaseId,

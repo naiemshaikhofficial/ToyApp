@@ -1,12 +1,13 @@
 'use server'
 
 import { getAdminClient } from '@/lib/supabase/admin'
-import { StaffRole } from '@/lib/auth'
+import { StaffRole, requireAuthenticatedStaff } from '@/lib/auth'
 import { logAdminActivity } from '@/lib/audit'
 import { revalidatePath } from 'next/cache'
 
 export async function getStaffMembersAction() {
   try {
+    await requireAuthenticatedStaff('staff')
     const supabase = getAdminClient()
     const { data, error } = await supabase
       .from('admin_staff')
@@ -25,9 +26,10 @@ export async function createStaffMemberAction(formData: {
   email: string
   fullName: string
   role: StaffRole
-  authorStaffEmail: string
+  authorStaffEmail?: string
 }) {
   try {
+    const author = await requireAuthenticatedStaff('staff')
     const supabase = getAdminClient()
     const cleanEmail = formData.email.toLowerCase().trim()
 
@@ -48,7 +50,7 @@ export async function createStaffMemberAction(formData: {
     if (error) return { success: false, error: error.message }
 
     await logAdminActivity({
-      staff_email: formData.authorStaffEmail,
+      staff_email: author.email,
       action: 'STAFF_MEMBER_CREATED',
       target_type: 'staff',
       target_id: data.id,
@@ -66,9 +68,10 @@ export async function updateStaffMemberAction(formData: {
   staffId: string
   role: StaffRole
   status: 'active' | 'suspended'
-  authorStaffEmail: string
+  authorStaffEmail?: string
 }) {
   try {
+    const author = await requireAuthenticatedStaff('staff')
     const supabase = getAdminClient()
     const { error } = await supabase
       .from('admin_staff')
@@ -82,7 +85,7 @@ export async function updateStaffMemberAction(formData: {
     if (error) return { success: false, error: error.message }
 
     await logAdminActivity({
-      staff_email: formData.authorStaffEmail,
+      staff_email: author.email,
       action: 'STAFF_MEMBER_UPDATED',
       target_type: 'staff',
       target_id: formData.staffId,
@@ -98,6 +101,7 @@ export async function updateStaffMemberAction(formData: {
 
 export async function getAuditLogsAction(limit: number = 50) {
   try {
+    await requireAuthenticatedStaff('staff')
     const supabase = getAdminClient()
     const { data, error } = await supabase
       .from('admin_audit_logs')

@@ -22,8 +22,17 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
+# environment variables & secrets (CRITICAL SECURITY)
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
 .env*.local
+!.env.example
 
 # typescript
 *.tsbuildinfo

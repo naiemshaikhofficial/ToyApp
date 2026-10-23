@@ -2,6 +2,7 @@
 
 import { getAdminClient } from '@/lib/supabase/admin'
 import { generateInvoiceHTML, InvoiceRecord } from '@/lib/invoiceUtils'
+import { requireAuthenticatedStaff } from '@/lib/auth'
 
 export async function getAdminInvoicesAction(params?: {
   search?: string
@@ -9,6 +10,7 @@ export async function getAdminInvoicesAction(params?: {
   pageSize?: number
 }) {
   try {
+    await requireAuthenticatedStaff('invoices')
     const supabase = getAdminClient()
     const page = params?.page || 1
     const pageSize = params?.pageSize || 20
@@ -72,6 +74,7 @@ export async function getAdminInvoicesAction(params?: {
 
 export async function getInvoiceHtmlAction(purchaseId: string) {
   try {
+    await requireAuthenticatedStaff('invoices')
     const supabase = getAdminClient()
     const { data: p, error } = await supabase
       .from('purchases')

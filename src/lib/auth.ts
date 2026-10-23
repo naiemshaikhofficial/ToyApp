@@ -1,4 +1,5 @@
 import { getAdminClient } from '@/lib/supabase/admin'
+import { getUser } from '@/lib/supabase/server'
 
 export type StaffRole =
   | 'super_admin'
@@ -49,46 +50,22 @@ export const ROLE_DEFINITIONS: Record<StaffRole, { title: string; description: s
   },
 }
 
-export async function getCurrentStaffUser(email?: string): Promise<StaffMember | null> {
-  const targetEmail = email || 'naiemshaikhofficial@gmail.com'
-  try {
-    const supabase = getAdminClient()
-    const { data, error } = await supabase
-      .from('admin_staff')
-      .select('*')
-      .eq('email', targetEmail.toLowerCase().trim())
-      .single()
-
-    if (error || !data) {
-      // Fallback: If user is one of the verified owner emails, create/return default super admin
-      if (
-        targetEmail.toLowerCase().includes('naiem') ||
-        targetEmail.toLowerCase().includes('producertoy')
-      ) {
-        return {
-          id: 'super-admin-root',
-          email: targetEmail,
-          full_name: 'Platform Administrator',
-          role: 'super_admin',
-          status: 'active',
-          permissions: ['*'],
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }
-      }
-      return null
-    }
-
-    return data as StaffMember
-  } catch (err) {
-    console.error('Error fetching staff member:', err)
-    return null
-  }
-}
+export type AdminModule =
+  | 'brands'
+  | 'products'
+  | 'orders'
+  | 'invoices'
+  | 'payouts'
+  | 'licenses'
+  | 'staff'
+  | 'analytics'
+  | 'news'
+  | 'support'
+  | 'users'
 
 export function hasPermission(
   staff: StaffMember | null,
-  module: 'brands' | 'products' | 'orders' | 'invoices' | 'payouts' | 'licenses' | 'staff' | 'analytics'
+  module: AdminModule
 ): boolean {
   if (!staff || staff.status !== 'active') return false
   if (staff.role === 'super_admin') return true
@@ -102,12 +79,73 @@ export function hasPermission(
     case 'payouts':
       return staff.role === 'finance_manager'
     case 'licenses':
+    case 'support':
       return staff.role === 'support_agent' || staff.role === 'catalog_manager'
+    case 'news':
+      return staff.role === 'editorial_team'
+    case 'users':
+      return staff.role === 'support_agent' || staff.role === 'finance_manager'
     case 'analytics':
       return staff.role === 'finance_manager' || staff.role === 'catalog_manager'
     case 'staff':
-      return false // only super_admin can manage staff
+      return false // strictly super_admin only
     default:
       return false
   }
+}
+
+/**
+ * Retrieves staff member profile strictly for the authenticated session or provided email
+ */
+export async function getCurrentStaffUser(email?: string): Promise<StaffMember | null> {
+  try {
+    let targetEmail = email?.trim().toLowerCase()
+
+    if (!targetEmail) {
+      const { data: { user } } = await getUser()
+      if (!user?.email) return null
+      targetEmail = user.email.trim().toLowerCase()
+    }
+
+    const supabase = getAdminClient()
+    const { data, error } = await supabase
+      .from('admin_staff')
+      .select('*')
+      .eq('email', targetEmail)
+      .eq('status', 'active')
+      .maybeSingle()
+
+    if (error || !data) {
+      return null
+    }
+
+    return data as StaffMember
+  } catch (err) {
+    console.error('Error fetching staff member:', err)
+    return null
+  }
+}
+
+/**
+ * Strict server-side RBAC guard for server actions & route handlers.
+ * Verifies that the caller has a valid session cookie and is an active staff member in admin_staff.
+ */
+export async function requireAuthenticatedStaff(module?: AdminModule): Promise<StaffMember> {
+  const { data: { user } } = await getUser()
+
+  if (!user || !user.email) {
+    throw new Error('Unauthorized: Administrative sign-in required.')
+  }
+
+  const staff = await getCurrentStaffUser(user.email)
+
+  if (!staff || staff.status !== 'active') {
+    throw new Error('Forbidden: Your account is not authorized as active ProducerToy administrative staff.')
+  }
+
+  if (module && !hasPermission(staff, module)) {
+    throw new Error(`Forbidden: Your role (${staff.role}) does not have permission to access the ${module} module.`)
+  }
+
+  return staff
 }

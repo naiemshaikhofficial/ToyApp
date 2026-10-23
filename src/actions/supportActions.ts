@@ -3,6 +3,7 @@
 import { getAdminClient } from '@/lib/supabase/admin'
 import { logAdminActivity } from '@/lib/audit'
 import { revalidatePath } from 'next/cache'
+import { requireAuthenticatedStaff } from '@/lib/auth'
 
 export interface SupportTicketSummary {
   id: string
@@ -32,6 +33,7 @@ export async function getSupportTicketsAction(params?: {
   pageSize?: number
 }) {
   try {
+    await requireAuthenticatedStaff('support')
     const supabase = getAdminClient()
     const page = params?.page || 1
     const pageSize = params?.pageSize || 20
@@ -86,6 +88,7 @@ export async function getSupportTicketsAction(params?: {
 
 export async function getTicketDetailsAction(ticketId: string) {
   try {
+    await requireAuthenticatedStaff('support')
     const supabase = getAdminClient()
 
     const { data: ticket, error: tickErr } = await supabase
@@ -118,9 +121,11 @@ export async function getTicketDetailsAction(ticketId: string) {
 export async function updateTicketStatusAction(
   ticketId: string,
   newStatus: string,
-  staffEmail: string
+  staffEmail?: string
 ) {
   try {
+    const staff = await requireAuthenticatedStaff('support')
+    const effectiveStaffEmail = staff.email || staffEmail || 'staff@producertoy.com'
     const supabase = getAdminClient()
 
     const { error } = await supabase
@@ -134,7 +139,7 @@ export async function updateTicketStatusAction(
     if (error) throw new Error(error.message)
 
     await logAdminActivity({
-      staff_email: staffEmail,
+      staff_email: effectiveStaffEmail,
       action: 'TICKET_STATUS_UPDATED',
       target_type: 'system',
       target_id: ticketId,
@@ -151,11 +156,14 @@ export async function updateTicketStatusAction(
 export async function replyToTicketAction(
   ticketId: string,
   message: string,
-  staffName: string,
-  staffEmail: string,
+  staffName?: string,
+  staffEmail?: string,
   senderType: 'staff' | 'internal_note' | 'escalation' = 'staff'
 ) {
   try {
+    const staff = await requireAuthenticatedStaff('support')
+    const effectiveStaffEmail = staff.email || staffEmail || 'staff@producertoy.com'
+    const effectiveStaffName = staffName || staff.full_name || 'ProducerToy Staff'
     const supabase = getAdminClient()
 
     const { data: newMsg, error: msgErr } = await supabase
@@ -163,7 +171,7 @@ export async function replyToTicketAction(
       .insert({
         ticket_id: ticketId,
         sender_type: senderType,
-        sender_name: staffName || 'ProducerToy Staff',
+        sender_name: effectiveStaffName,
         message: message.trim(),
         created_at: new Date().toISOString(),
       })
@@ -181,7 +189,7 @@ export async function replyToTicketAction(
       .eq('id', ticketId)
 
     await logAdminActivity({
-      staff_email: staffEmail,
+      staff_email: effectiveStaffEmail,
       action: 'TICKET_REPLIED',
       target_type: 'system',
       target_id: ticketId,
@@ -209,9 +217,11 @@ export async function escalateTicketToDeveloperAction({
   brandName: string
   developerEmail?: string
   notes: string
-  staffEmail: string
+  staffEmail?: string
 }) {
   try {
+    const staff = await requireAuthenticatedStaff('support')
+    const effectiveStaffEmail = staff.email || staffEmail || 'staff@producertoy.com'
     const supabase = getAdminClient()
 
     // 1. Update ticket status to ESCALATED_TO_DEV and priority to HIGH
@@ -247,7 +257,7 @@ export async function escalateTicketToDeveloperAction({
 
     // 3. Log Audit
     await logAdminActivity({
-      staff_email: staffEmail,
+      staff_email: effectiveStaffEmail,
       action: 'TICKET_ESCALATED_TO_DEV',
       target_type: 'system',
       target_id: ticketId,
@@ -272,9 +282,11 @@ export async function escalateTicketToTeamAction({
 }: {
   ticketId: string
   reason: string
-  staffEmail: string
+  staffEmail?: string
 }) {
   try {
+    const staff = await requireAuthenticatedStaff('support')
+    const effectiveStaffEmail = staff.email || staffEmail || 'staff@producertoy.com'
     const supabase = getAdminClient()
 
     // 1. Update ticket status to ESCALATED_TO_TEAM and priority to URGENT
@@ -308,7 +320,7 @@ export async function escalateTicketToTeamAction({
 
     // 3. Log Audit
     await logAdminActivity({
-      staff_email: staffEmail,
+      staff_email: effectiveStaffEmail,
       action: 'TICKET_ESCALATED_TO_TEAM',
       target_type: 'system',
       target_id: ticketId,
@@ -331,9 +343,11 @@ export async function deescalateTicketAction({
   staffEmail,
 }: {
   ticketId: string
-  staffEmail: string
+  staffEmail?: string
 }) {
   try {
+    const staff = await requireAuthenticatedStaff('support')
+    const effectiveStaffEmail = staff.email || staffEmail || 'staff@producertoy.com'
     const supabase = getAdminClient()
 
     const { error } = await supabase
@@ -359,7 +373,7 @@ export async function deescalateTicketAction({
       .single()
 
     await logAdminActivity({
-      staff_email: staffEmail,
+      staff_email: effectiveStaffEmail,
       action: 'TICKET_DEESCALATED',
       target_type: 'system',
       target_id: ticketId,
@@ -377,6 +391,7 @@ export async function deescalateTicketAction({
  */
 export async function getBrandsListForSupportAction() {
   try {
+    await requireAuthenticatedStaff('support')
     const supabase = getAdminClient()
     const { data, error } = await supabase
       .from('brands')
