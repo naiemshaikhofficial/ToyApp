@@ -26,6 +26,9 @@ import {
   Layers,
   ChevronRight,
 } from 'lucide-react'
+import { AreaSparkline, LineSparkline, BarSparkline } from '@/components/ui/charts/Sparklines'
+import { LiveLineChart } from '@/components/ui/charts/LiveLineChart'
+import { ChoroplethMap } from '@/components/ui/charts/ChoroplethMap'
 
 export const revalidate = 0
 
@@ -91,7 +94,7 @@ export default async function AdminDashboardPage() {
         {/* 2. Executive 70/30 Financial Matrix */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Gross Marketplace Volume */}
-          <div className="epic-card p-5 space-y-2">
+          <div className="epic-card p-5 space-y-2 flex flex-col justify-between">
             <div className="flex items-center justify-between text-zinc-400">
               <span className="text-xs font-mono uppercase font-semibold">Normalized GMV</span>
               <DollarSign className="w-4 h-4 text-white" />
@@ -106,13 +109,16 @@ export default async function AdminDashboardPage() {
                 <span>INR: ₹{stats?.gmvInr?.toLocaleString() || '0'}</span>
               </div>
             </div>
+            <div className="py-1">
+              <AreaSparkline data={[18, 25, 22, 38, 32, 48, 42, 60, 55, 75]} height={32} />
+            </div>
             <div className="pt-2 border-t border-[#242424] text-[10px] text-zinc-500 font-mono">
               Total marketplace checkout volume
             </div>
           </div>
 
           {/* Platform Revenue (30%) */}
-          <div className="epic-card p-5 space-y-2">
+          <div className="epic-card p-5 space-y-2 flex flex-col justify-between">
             <div className="flex items-center justify-between text-zinc-400">
               <span className="text-xs font-mono uppercase font-semibold">Platform Net (30%)</span>
               <TrendingUp className="w-4 h-4 text-white" />
@@ -125,13 +131,16 @@ export default async function AdminDashboardPage() {
                 ProducerToy Net Retain Fee
               </p>
             </div>
+            <div className="py-1">
+              <LineSparkline data={[6, 9, 8, 14, 12, 18, 16, 22, 20, 28]} height={32} showDot />
+            </div>
             <div className="pt-2 border-t border-[#242424] text-[10px] text-zinc-500 font-mono">
               Automated 30% contract commission
             </div>
           </div>
 
           {/* Creator Earnings Pool (70%) */}
-          <div className="epic-card p-5 space-y-2">
+          <div className="epic-card p-5 space-y-2 flex flex-col justify-between">
             <div className="flex items-center justify-between text-zinc-400">
               <span className="text-xs font-mono uppercase font-semibold">Creator Pool (70%)</span>
               <Sparkles className="w-4 h-4 text-white" />
@@ -144,13 +153,16 @@ export default async function AdminDashboardPage() {
                 Brand Developer Royalty Allocation
               </p>
             </div>
+            <div className="py-1">
+              <AreaSparkline data={[12, 17, 15, 26, 22, 32, 28, 40, 37, 50]} height={32} />
+            </div>
             <div className="pt-2 border-t border-[#242424] text-[10px] text-zinc-500 font-mono">
               Wise / Stripe Connect / UPI Settlement
             </div>
           </div>
 
           {/* Average Order Value (AOV) & Total Orders */}
-          <div className="epic-card p-5 space-y-2">
+          <div className="epic-card p-5 space-y-2 flex flex-col justify-between">
             <div className="flex items-center justify-between text-zinc-400">
               <span className="text-xs font-mono uppercase font-semibold">Average Order (AOV)</span>
               <Receipt className="w-4 h-4 text-white" />
@@ -163,9 +175,27 @@ export default async function AdminDashboardPage() {
                 From {stats?.totalPurchases || 0} completed checkouts
               </div>
             </div>
+            <div className="py-1">
+              <BarSparkline data={[8, 12, 15, 10, 18, 22, 16, 25, 28, 24]} height={32} />
+            </div>
             <div className="pt-2 border-t border-[#242424] text-[10px] text-zinc-500 font-mono">
               Fulfillment yield per transaction
             </div>
+          </div>
+        </div>
+
+        {/* 2.5 Real-Time Telemetry & Global Cloudflare Edge Traffic */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-6">
+            <LiveLineChart
+              title="Real-Time Global Checkout Volume"
+              streaming={true}
+              intervalMs={3500}
+              height={220}
+            />
+          </div>
+          <div className="lg:col-span-6">
+            <ChoroplethMap />
           </div>
         </div>
 
