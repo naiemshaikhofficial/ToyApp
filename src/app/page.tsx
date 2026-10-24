@@ -41,6 +41,8 @@ export default async function AdminDashboardPage() {
   const topBrands = data?.topBrands || []
   const recentOrders = data?.recentOrders || []
   const recentActivity = data?.recentActivity || []
+  const timelines = data?.timelines
+  const countryTraffic = data?.countryTraffic || []
 
   return (
     <div className="flex-1 flex flex-col font-sans">
@@ -93,10 +95,10 @@ export default async function AdminDashboardPage() {
 
         {/* 2. Executive 70/30 Financial Matrix */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Gross Marketplace Volume */}
+          {/* Total Sales */}
           <div className="epic-card p-5 space-y-2 flex flex-col justify-between">
             <div className="flex items-center justify-between text-zinc-400">
-              <span className="text-xs font-mono uppercase font-semibold">Normalized GMV</span>
+              <span className="text-xs font-mono uppercase font-semibold">Total Sales</span>
               <DollarSign className="w-4 h-4 text-white" />
             </div>
             <div>
@@ -110,17 +112,20 @@ export default async function AdminDashboardPage() {
               </div>
             </div>
             <div className="py-1">
-              <AreaSparkline data={[18, 25, 22, 38, 32, 48, 42, 60, 55, 75]} height={32} />
+              <AreaSparkline
+                data={timelines?.gmv && timelines.gmv.length > 1 ? timelines.gmv : [0, 0, 0, 0, 0, 0, 0]}
+                height={32}
+              />
             </div>
             <div className="pt-2 border-t border-[#242424] text-[10px] text-zinc-500 font-mono">
-              Total marketplace checkout volume
+              Total revenue from all store orders
             </div>
           </div>
 
           {/* Platform Revenue (30%) */}
           <div className="epic-card p-5 space-y-2 flex flex-col justify-between">
             <div className="flex items-center justify-between text-zinc-400">
-              <span className="text-xs font-mono uppercase font-semibold">Platform Net (30%)</span>
+              <span className="text-xs font-mono uppercase font-semibold">Platform Profit (30%)</span>
               <TrendingUp className="w-4 h-4 text-white" />
             </div>
             <div>
@@ -128,21 +133,25 @@ export default async function AdminDashboardPage() {
                 ${stats?.platformRevenueUsd?.toFixed(2) || '0.00'}
               </div>
               <p className="text-[11px] text-zinc-400 mt-1 font-mono">
-                ProducerToy Net Retain Fee
+                Our 30% platform share
               </p>
             </div>
             <div className="py-1">
-              <LineSparkline data={[6, 9, 8, 14, 12, 18, 16, 22, 20, 28]} height={32} showDot />
+              <LineSparkline
+                data={timelines?.platformRevenue && timelines.platformRevenue.length > 1 ? timelines.platformRevenue : [0, 0, 0, 0, 0, 0, 0]}
+                height={32}
+                showDot
+              />
             </div>
             <div className="pt-2 border-t border-[#242424] text-[10px] text-zinc-500 font-mono">
-              Automated 30% contract commission
+              Calculated automatically on every sale
             </div>
           </div>
 
           {/* Creator Earnings Pool (70%) */}
           <div className="epic-card p-5 space-y-2 flex flex-col justify-between">
             <div className="flex items-center justify-between text-zinc-400">
-              <span className="text-xs font-mono uppercase font-semibold">Creator Pool (70%)</span>
+              <span className="text-xs font-mono uppercase font-semibold">Creator Payouts (70%)</span>
               <Sparkles className="w-4 h-4 text-white" />
             </div>
             <div>
@@ -150,21 +159,24 @@ export default async function AdminDashboardPage() {
                 ${stats?.creatorPayoutsUsd?.toFixed(2) || '0.00'}
               </div>
               <p className="text-[11px] text-zinc-400 mt-1 font-mono">
-                Brand Developer Royalty Allocation
+                Earnings reserved for audio creators
               </p>
             </div>
             <div className="py-1">
-              <AreaSparkline data={[12, 17, 15, 26, 22, 32, 28, 40, 37, 50]} height={32} />
+              <AreaSparkline
+                data={timelines?.creatorPayouts && timelines.creatorPayouts.length > 1 ? timelines.creatorPayouts : [0, 0, 0, 0, 0, 0, 0]}
+                height={32}
+              />
             </div>
             <div className="pt-2 border-t border-[#242424] text-[10px] text-zinc-500 font-mono">
-              Wise / Stripe Connect / UPI Settlement
+              Ready for creator bank & UPI payouts
             </div>
           </div>
 
-          {/* Average Order Value (AOV) & Total Orders */}
+          {/* Average Order Value & Total Orders */}
           <div className="epic-card p-5 space-y-2 flex flex-col justify-between">
             <div className="flex items-center justify-between text-zinc-400">
-              <span className="text-xs font-mono uppercase font-semibold">Average Order (AOV)</span>
+              <span className="text-xs font-mono uppercase font-semibold">Average Order Value</span>
               <Receipt className="w-4 h-4 text-white" />
             </div>
             <div>
@@ -172,40 +184,46 @@ export default async function AdminDashboardPage() {
                 ${stats?.averageOrderValueUsd?.toFixed(2) || '0.00'}
               </div>
               <div className="text-[11px] text-zinc-400 mt-1 font-mono">
-                From {stats?.totalPurchases || 0} completed checkouts
+                From {stats?.totalPurchases || 0} completed orders
               </div>
             </div>
             <div className="py-1">
-              <BarSparkline data={[8, 12, 15, 10, 18, 22, 16, 25, 28, 24]} height={32} />
+              <BarSparkline
+                data={timelines?.aov && timelines.aov.length > 1 ? timelines.aov : [0, 0, 0, 0, 0, 0, 0]}
+                height={32}
+              />
             </div>
             <div className="pt-2 border-t border-[#242424] text-[10px] text-zinc-500 font-mono">
-              Fulfillment yield per transaction
+              Average amount spent per purchase
             </div>
           </div>
         </div>
 
-        {/* 2.5 Real-Time Telemetry & Global Cloudflare Edge Traffic */}
+        {/* 2.5 Real-Time Sales & Global Visitors */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-6">
             <LiveLineChart
-              title="Real-Time Global Checkout Volume"
+              title="Sales Over Time"
+              data={timelines?.gmv && timelines.gmv.length > 1 ? timelines.gmv : [0, 0, 0, 0, 0, 0, 0]}
+              days={timelines?.days || []}
+              currentValue={stats?.normalizedGrossUsd || 0}
               streaming={true}
-              intervalMs={3500}
               height={220}
             />
           </div>
           <div className="lg:col-span-6">
-            <ChoroplethMap />
+            <ChoroplethMap data={countryTraffic} />
           </div>
         </div>
 
         {/* 3. Action-Required Escalation & Queue Center */}
+        {/* 3. Customer Support & Inquiries Center */}
         <div className="p-5 rounded-xl bg-[#181818] border border-[#2a2a2a] space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <LifeBuoy className="w-4 h-4 text-white" />
               <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
-                Action-Required Escalation Deck
+                Customer Support & Inquiries
               </h2>
             </div>
             <Link
@@ -222,12 +240,12 @@ export default async function AdminDashboardPage() {
               className="p-3.5 rounded-lg bg-[#141414] border border-[#242424] hover:border-zinc-500 transition group flex items-center justify-between"
             >
               <div>
-                <div className="text-[10px] text-zinc-500 uppercase">Core Escalations</div>
+                <div className="text-[10px] text-zinc-500 uppercase">Urgent Tickets</div>
                 <div className="text-lg font-bold text-white mt-0.5 flex items-center gap-1.5">
                   <Flame className="w-4 h-4 text-white" />
                   <span>{stats?.escalatedToTeamTickets || 0}</span>
                 </div>
-                <div className="text-[10px] text-zinc-400 mt-0.5">Super Admin Queue</div>
+                <div className="text-[10px] text-zinc-400 mt-0.5">Needs Immediate Attention</div>
               </div>
               <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-white transition" />
             </Link>
@@ -237,12 +255,12 @@ export default async function AdminDashboardPage() {
               className="p-3.5 rounded-lg bg-[#141414] border border-[#242424] hover:border-zinc-500 transition group flex items-center justify-between"
             >
               <div>
-                <div className="text-[10px] text-zinc-500 uppercase">Routed to Creators</div>
+                <div className="text-[10px] text-zinc-500 uppercase">Sent to Developers</div>
                 <div className="text-lg font-bold text-white mt-0.5 flex items-center gap-1.5">
                   <ArrowUpRight className="w-4 h-4 text-white" />
                   <span>{stats?.escalatedToDevTickets || 0}</span>
                 </div>
-                <div className="text-[10px] text-zinc-400 mt-0.5">Developer VST Patches</div>
+                <div className="text-[10px] text-zinc-400 mt-0.5">Plugin & Tool Questions</div>
               </div>
               <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-white transition" />
             </Link>
@@ -252,12 +270,12 @@ export default async function AdminDashboardPage() {
               className="p-3.5 rounded-lg bg-[#141414] border border-[#242424] hover:border-zinc-500 transition group flex items-center justify-between"
             >
               <div>
-                <div className="text-[10px] text-zinc-500 uppercase">Awaiting Response</div>
+                <div className="text-[10px] text-zinc-500 uppercase">Waiting for Reply</div>
                 <div className="text-lg font-bold text-white mt-0.5 flex items-center gap-1.5">
                   <Clock className="w-4 h-4 text-white" />
                   <span>{stats?.openTickets || 0}</span>
                 </div>
-                <div className="text-[10px] text-zinc-400 mt-0.5">Open Inquiries</div>
+                <div className="text-[10px] text-zinc-400 mt-0.5">Customer Questions</div>
               </div>
               <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-white transition" />
             </Link>
@@ -267,12 +285,12 @@ export default async function AdminDashboardPage() {
               className="p-3.5 rounded-lg bg-[#141414] border border-[#242424] hover:border-zinc-500 transition group flex items-center justify-between"
             >
               <div>
-                <div className="text-[10px] text-zinc-500 uppercase">Creator Settlements</div>
+                <div className="text-[10px] text-zinc-500 uppercase">Creator Payouts</div>
                 <div className="text-lg font-bold text-white mt-0.5 flex items-center gap-1.5">
                   <CheckCircle className="w-4 h-4 text-white" />
                   <span>Ready</span>
                 </div>
-                <div className="text-[10px] text-zinc-400 mt-0.5">70/30 Ledger Clean</div>
+                <div className="text-[10px] text-zinc-400 mt-0.5">Calculated & Ready</div>
               </div>
               <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-white transition" />
             </Link>
@@ -288,7 +306,7 @@ export default async function AdminDashboardPage() {
                 <Code2 className="w-4 h-4 text-white" />
                 <div>
                   <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
-                    Toy Creator Developer Ecosystem
+                    Creator Portal (Audio Developers)
                   </h3>
                   <div className="text-[10px] text-zinc-400 font-mono">
                     creators.producertoy.com
@@ -307,24 +325,24 @@ export default async function AdminDashboardPage() {
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 font-mono">
               <div className="p-3 rounded-lg bg-[#181818] border border-[#2a2a2a]">
-                <div className="text-[10px] text-zinc-500 uppercase">Onboarded Brands</div>
+                <div className="text-[10px] text-zinc-500 uppercase">Audio Brands</div>
                 <div className="text-xl font-bold text-white mt-1">{stats?.totalBrands || 0}</div>
                 <Link href="/brands" className="text-[10px] text-zinc-400 hover:text-white underline mt-0.5 block">
-                  Browse 304 Brands &rarr;
+                  View Brands &rarr;
                 </Link>
               </div>
 
               <div className="p-3 rounded-lg bg-[#181818] border border-[#2a2a2a]">
-                <div className="text-[10px] text-zinc-500 uppercase">Creator Members</div>
+                <div className="text-[10px] text-zinc-500 uppercase">Registered Developers</div>
                 <div className="text-xl font-bold text-white mt-1">{stats?.totalBrandMembers || 0}</div>
-                <div className="text-[10px] text-zinc-500 mt-0.5">Owners & Devs</div>
+                <div className="text-[10px] text-zinc-500 mt-0.5">Developer Accounts</div>
               </div>
 
               <div className="p-3 rounded-lg bg-[#181818] border border-[#2a2a2a]">
-                <div className="text-[10px] text-zinc-500 uppercase">Workstation DRM</div>
+                <div className="text-[10px] text-zinc-500 uppercase">Active Devices</div>
                 <div className="text-xl font-bold text-white mt-1">{stats?.activeDevices || 0}</div>
                 <Link href="/licenses" className="text-[10px] text-zinc-400 hover:text-white underline mt-0.5 block">
-                  Audit Machines &rarr;
+                  View Devices &rarr;
                 </Link>
               </div>
             </div>
@@ -337,7 +355,7 @@ export default async function AdminDashboardPage() {
                 <Package className="w-4 h-4 text-white" />
                 <div>
                   <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
-                    ProducerToy Storefront Operations
+                    Online Store (Storefront)
                   </h3>
                   <div className="text-[10px] text-zinc-400 font-mono">
                     producertoy.com
@@ -356,7 +374,7 @@ export default async function AdminDashboardPage() {
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono">
               <div className="p-3 rounded-lg bg-[#181818] border border-[#2a2a2a]">
-                <div className="text-[10px] text-zinc-500 uppercase">Catalog Items</div>
+                <div className="text-[10px] text-zinc-500 uppercase">Products for Sale</div>
                 <div className="text-xl font-bold text-white mt-1">
                   {stats?.activeProducts || 0}{' '}
                   <span className="text-xs text-zinc-500 font-normal">/ {stats?.totalProducts || 0}</span>
@@ -367,7 +385,7 @@ export default async function AdminDashboardPage() {
               </div>
 
               <div className="p-3 rounded-lg bg-[#181818] border border-[#2a2a2a]">
-                <div className="text-[10px] text-zinc-500 uppercase">Customer Accounts</div>
+                <div className="text-[10px] text-zinc-500 uppercase">Registered Customers</div>
                 <div className="text-xl font-bold text-white mt-1">{stats?.totalCustomers || 0}</div>
                 <Link href="/users" className="text-[10px] text-zinc-400 hover:text-white underline mt-0.5 block">
                   Directory &rarr;
@@ -375,23 +393,23 @@ export default async function AdminDashboardPage() {
               </div>
 
               <div className="p-3 rounded-lg bg-[#181818] border border-[#2a2a2a]">
-                <div className="text-[10px] text-zinc-500 uppercase">Audio News (Turso)</div>
+                <div className="text-[10px] text-zinc-500 uppercase">Audio Deals & News</div>
                 <div className="text-xl font-bold text-white mt-1">
                   {stats?.totalTursoNews || 160}+
                 </div>
                 <Link href="/news" className="text-[10px] text-zinc-400 hover:text-white underline mt-0.5 block">
-                  Deals Engine &rarr;
+                  Browse Deals &rarr;
                 </Link>
               </div>
 
               <div className="p-3 rounded-lg bg-[#181818] border border-[#2a2a2a]">
-                <div className="text-[10px] text-zinc-500 uppercase">Blogs (Supabase)</div>
+                <div className="text-[10px] text-zinc-500 uppercase">Articles & Guides</div>
                 <div className="text-xl font-bold text-white mt-1">
                   {stats?.publishedArticles || 0}{' '}
                   <span className="text-xs text-zinc-500 font-normal">/ {stats?.totalArticles || 0}</span>
                 </div>
                 <Link href="/blogs" className="text-[10px] text-zinc-400 hover:text-white underline mt-0.5 block">
-                  Tutorials &rarr;
+                  Read Articles &rarr;
                 </Link>
               </div>
             </div>
@@ -641,8 +659,8 @@ export default async function AdminDashboardPage() {
             >
               <Newspaper className="w-4 h-4 text-zinc-400 group-hover:text-white transition" />
               <div className="mt-3">
-                <div className="font-bold text-white">Audio News</div>
-                <div className="text-[10px] text-zinc-500">Turso (160+ Deals)</div>
+                <div className="font-bold text-white">Deals & News</div>
+                <div className="text-[10px] text-zinc-500">160+ Active Deals</div>
               </div>
             </Link>
 
@@ -652,8 +670,8 @@ export default async function AdminDashboardPage() {
             >
               <BookOpen className="w-4 h-4 text-zinc-400 group-hover:text-white transition" />
               <div className="mt-3">
-                <div className="font-bold text-white">Editorial Blogs</div>
-                <div className="text-[10px] text-zinc-500">Supabase (12 Posts)</div>
+                <div className="font-bold text-white">Articles & Guides</div>
+                <div className="text-[10px] text-zinc-500">Tutorials & Articles</div>
               </div>
             </Link>
 

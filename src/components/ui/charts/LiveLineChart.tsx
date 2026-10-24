@@ -15,42 +15,27 @@ export interface DataPoint {
 }
 
 export interface LiveLineChartProps {
-  initialData?: number[];
+  data?: number[];
+  days?: string[];
   height?: number;
   streaming?: boolean;
-  intervalMs?: number;
   title?: string;
   unit?: string;
+  currentValue?: number;
   className?: string;
 }
 
 export function LiveLineChart({
-  initialData = [18, 24, 20, 35, 30, 48, 42, 60, 55, 75, 70, 88],
+  data = [0, 0, 0, 0, 0, 0, 0],
+  days = [],
   height = 200,
   streaming = true,
-  intervalMs = 3000,
-  title = "Real-Time Sales Activity",
+  title = "Sales Over Time",
   unit = "$",
+  currentValue,
   className,
 }: LiveLineChartProps) {
   const gradientId = useId();
-  const [data, setData] = useState<number[]>(initialData);
-
-  // Streaming real-time tick simulation
-  useEffect(() => {
-    if (!streaming) return;
-
-    const interval = setInterval(() => {
-      setData((prev) => {
-        const last = prev[prev.length - 1] ?? 50;
-        const change = (Math.random() - 0.46) * 15;
-        const nextVal = Math.max(10, Math.min(120, Math.round(last + change)));
-        return [...prev.slice(1), nextVal];
-      });
-    }, intervalMs);
-
-    return () => clearInterval(interval);
-  }, [streaming, intervalMs]);
 
   const min = Math.min(...data);
   const max = Math.max(...data);
@@ -73,7 +58,8 @@ export function LiveLineChart({
 
   const lastPoint = points[points.length - 1];
   const areaD = `${pathD} L ${lastPoint.x} ${height} L ${points[0].x} ${height} Z`;
-  const currentValue = data[data.length - 1] ?? 0;
+  const effectiveCurrentValue =
+    currentValue !== undefined ? currentValue : (data[data.length - 1] ?? 0);
 
   return (
     <div
@@ -92,21 +78,21 @@ export function LiveLineChart({
             {streaming && (
               <span className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#181818] border border-[#2a2a2a] text-[10px] font-mono text-zinc-300">
                 <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                LIVE
+                Live
               </span>
             )}
           </div>
           <p className="text-[11px] font-mono text-zinc-500 mt-0.5">
-            Streaming throughput stream
+            Last 7 days of completed sales
           </p>
         </div>
 
         <div className="text-right">
           <div className="text-lg font-mono font-bold text-white tracking-tight">
             {unit}
-            {currentValue.toLocaleString()}
+            {effectiveCurrentValue.toFixed(2)}
           </div>
-          <div className="text-[10px] font-mono text-zinc-400">Current Rate</div>
+          <div className="text-[10px] font-mono text-zinc-400">Today&apos;s Sales</div>
         </div>
       </div>
 
@@ -166,9 +152,9 @@ export function LiveLineChart({
 
       {/* Axis Footer */}
       <div className="flex items-center justify-between pt-2 border-t border-[#242424] text-[10px] font-mono text-zinc-500">
-        <span>T - 12m</span>
-        <span>T - 6m</span>
-        <span className="text-zinc-300 font-bold">Now</span>
+        <span>{days.length > 0 ? days[0].slice(5) : "T - 6d"}</span>
+        <span>{days.length > 3 ? days[Math.floor(days.length / 2)].slice(5) : "T - 3d"}</span>
+        <span className="text-zinc-300 font-bold">Today</span>
       </div>
     </div>
   );

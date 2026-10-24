@@ -164,15 +164,15 @@ export function TursoNewsClient({
     })
   }
 
-  // Delete Article from Turso
+  // Delete Article
   const handleDeleteArticle = async (id: string, title: string) => {
-    if (!confirm(`Are you sure you want to delete "${title}" from Turso DB? This cannot be undone.`)) return
+    if (!confirm(`Are you sure you want to delete "${title}"? This cannot be undone.`)) return
     startTransition(async () => {
       const res = await deleteTursoNewsAction(id, currentStaffEmail)
       if (res.success) {
         setArticles((prev) => prev.filter((a) => a.id !== id))
         setTotalCount((c) => Math.max(0, c - 1))
-        setNotification({ text: 'Article deleted from Turso DB successfully.', type: 'success' })
+        setNotification({ text: 'Article deleted successfully.', type: 'success' })
       } else {
         setNotification({ text: res.error || 'Failed to delete article', type: 'error' })
       }
@@ -291,7 +291,7 @@ export function TursoNewsClient({
         <div className="bg-[#181818] border border-[#2a2a2a] p-4 rounded-xl flex items-center justify-between">
           <div className="space-y-1">
             <div className="text-[10px] font-mono uppercase text-zinc-400 tracking-wider">
-              Turso News Database
+              Audio Deals Database
             </div>
             <div className="text-2xl font-bold font-mono text-white">{totalCount}</div>
             <div className="text-[10px] text-zinc-500 font-mono">160+ Synced Edge Articles</div>
@@ -351,7 +351,7 @@ export function TursoNewsClient({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search Turso articles by title, slug, source..."
+              placeholder="Search deals and articles by title, slug, source..."
               className="w-full bg-[#121212] border border-[#2e2e2e] rounded-lg pl-10 pr-4 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white transition font-mono"
             />
           </form>
@@ -393,7 +393,7 @@ export function TursoNewsClient({
               className="flex items-center gap-2 px-4 py-2 bg-white text-black hover:bg-zinc-200 rounded-lg text-xs font-bold transition shadow-sm"
             >
               <Plus className="w-4 h-4" />
-              <span>Post Turso Deal</span>
+              <span>Post New Deal</span>
             </button>
           </div>
         </div>
@@ -454,7 +454,7 @@ export function TursoNewsClient({
           <div className="flex items-center gap-2">
             <Newspaper className="w-4 h-4 text-white" />
             <h2 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
-              Turso LibSQL Audio News Vault
+              Audio Deals & News Archive
             </h2>
             <span className="text-[10px] font-mono px-2 py-0.5 bg-[#202020] border border-[#333] text-zinc-300 rounded">
               {totalCount} Total
@@ -483,7 +483,7 @@ export function TursoNewsClient({
               {articles.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="text-center py-12 text-zinc-500 font-mono">
-                    No Turso news articles match the current filter.
+                    No news articles match the current filter.
                   </td>
                 </tr>
               ) : (
@@ -683,10 +683,10 @@ export function TursoNewsClient({
                 <Newspaper className="w-5 h-5 text-white" />
                 <div>
                   <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
-                    Post to Turso News Engine
+                    Publish Audio Deal / Article
                   </h3>
                   <div className="text-[10px] text-zinc-400 font-mono">
-                    Directly populates Turso LibSQL & producertoy.com/news
+                    Directly publishes to the live store at producertoy.com/news
                   </div>
                 </div>
               </div>
@@ -869,7 +869,7 @@ export function TursoNewsClient({
                   disabled={isPending}
                   className="px-6 py-2.5 bg-white text-black hover:bg-zinc-200 rounded-lg text-xs font-bold transition disabled:opacity-50"
                 >
-                  {isPending ? 'Saving...' : 'Post to Turso'}
+                  {isPending ? 'Saving...' : 'Publish Deal'}
                 </button>
               </div>
             </form>

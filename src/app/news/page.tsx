@@ -10,8 +10,8 @@ export default async function NewsPage() {
   return (
     <div className="flex-1 flex flex-col font-sans">
       <AdminHeader
-        title="Turso Audio News & Deals Engine"
-        subtitle="160+ Edge Synced Articles from Turso LibSQL, VST Deals, Freeware & Telegram Automation"
+        title="Audio Deals & News Engine"
+        subtitle="160+ Latest VST Deals, Freeware, and Plugin Announcements"
       />
       <main className="flex-1">
         <TursoNewsClient

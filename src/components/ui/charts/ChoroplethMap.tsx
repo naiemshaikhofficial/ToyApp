@@ -22,19 +22,8 @@ export interface ChoroplethMapProps {
   className?: string;
 }
 
-const DEFAULT_COUNTRY_DATA: CountryTraffic[] = [
-  { code: "US", name: "United States", visitors: 4820, percentage: 41 },
-  { code: "IN", name: "India", visitors: 2940, percentage: 25 },
-  { code: "GB", name: "United Kingdom", visitors: 1120, percentage: 9.5 },
-  { code: "DE", name: "Germany", visitors: 890, percentage: 7.6 },
-  { code: "CA", name: "Canada", visitors: 640, percentage: 5.4 },
-  { code: "JP", name: "Japan", visitors: 510, percentage: 4.3 },
-  { code: "AU", name: "Australia", visitors: 390, percentage: 3.3 },
-  { code: "FR", name: "France", visitors: 310, percentage: 2.6 },
-];
-
 export function ChoroplethMap({
-  data = DEFAULT_COUNTRY_DATA,
+  data = [],
   className,
 }: ChoroplethMapProps) {
   const [hovered, setHovered] = useState<CountryTraffic | null>(null);
@@ -58,17 +47,17 @@ export function ChoroplethMap({
           <div className="flex items-center gap-2">
             <Globe className="w-4 h-4 text-white" />
             <h3 className="text-sm font-bold uppercase tracking-wider text-white">
-              Cloudflare Edge Traffic Distribution
+              Where Visitors Come From
             </h3>
           </div>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Real-time geolocation telemetry via CF-IPCountry & worker analytics
+            Countries where people are visiting and buying from
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="px-3 py-1 rounded bg-[#181818] border border-[#2a2a2a] text-right">
-            <span className="text-[10px] font-mono text-zinc-500 uppercase block">Total Sessions</span>
+            <span className="text-[10px] font-mono text-zinc-500 uppercase block">Total Visitors</span>
             <span className="text-xs font-mono font-bold text-white">
               {totalVisitors.toLocaleString()}
             </span>
@@ -154,25 +143,30 @@ export function ChoroplethMap({
               onMouseLeave={() => setHovered(null)}
             />
 
-            {/* Telemetry Target Pulses */}
-            {/* US Hub */}
-            <g transform="translate(100, 65)">
-              <circle r="3" fill="#ffffff" />
-              <circle r="9" fill="#ffffff" opacity="0.25" className="animate-ping" />
-            </g>
-            {/* India Hub */}
-            <g transform="translate(330, 85)">
-              <circle r="3" fill="#ffffff" />
-              <circle r="9" fill="#ffffff" opacity="0.25" className="animate-ping" />
-            </g>
-            {/* Germany/Europe Hub */}
-            <g transform="translate(240, 58)">
-              <circle r="2.5" fill="#ffffff" />
-            </g>
-            {/* UK Hub */}
-            <g transform="translate(225, 48)">
-              <circle r="2" fill="#d4d4d8" />
-            </g>
+            {/* Telemetry Target Pulses - Rendered strictly for verified active countries in DB */}
+            {data.some((d) => d.code === "IN") && (
+              <g transform="translate(330, 85)">
+                <circle r="3.5" fill="#ffffff" />
+                <circle r="10" fill="#ffffff" opacity="0.3" className="animate-ping" />
+              </g>
+            )}
+            {data.some((d) => d.code === "US") && (
+              <g transform="translate(100, 65)">
+                <circle r="3.5" fill="#ffffff" />
+                <circle r="10" fill="#ffffff" opacity="0.3" className="animate-ping" />
+              </g>
+            )}
+            {data.some((d) => d.code === "DE") && (
+              <g transform="translate(240, 58)">
+                <circle r="3" fill="#ffffff" />
+                <circle r="8" fill="#ffffff" opacity="0.25" className="animate-ping" />
+              </g>
+            )}
+            {data.some((d) => d.code === "GB") && (
+              <g transform="translate(225, 48)">
+                <circle r="2.5" fill="#ffffff" />
+              </g>
+            )}
           </svg>
 
           {/* Interactive Hover Tooltip */}
@@ -189,36 +183,42 @@ export function ChoroplethMap({
         <div className="lg:col-span-5 space-y-2.5">
           <div className="text-[11px] font-mono text-zinc-500 uppercase tracking-wider pb-1 border-b border-[#242424] flex justify-between">
             <span>Country</span>
-            <span>Sessions / Share</span>
+            <span>Visitors & Share</span>
           </div>
 
           <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
-            {data.map((c) => (
-              <div
-                key={c.code}
-                onMouseEnter={() => setHovered(c)}
-                onMouseLeave={() => setHovered(null)}
-                className="p-2 rounded bg-[#181818] hover:bg-[#222222] border border-[#262626] flex items-center justify-between text-xs transition cursor-pointer"
-              >
-                <div className="flex items-center gap-2.5">
-                  <span className="w-6 h-4 rounded bg-[#2a2a2a] border border-white/10 flex items-center justify-center font-mono text-[9px] font-bold text-white">
-                    {c.code}
-                  </span>
-                  <span className="text-white font-medium text-xs">{c.name}</span>
-                </div>
-
-                <div className="flex items-center gap-3 font-mono">
-                  <span className="text-zinc-300 text-[11px]">{c.visitors.toLocaleString()}</span>
-                  <div className="w-12 bg-[#2a2a2a] h-1.5 rounded-full overflow-hidden">
-                    <div
-                      className="bg-white h-full rounded-full"
-                      style={{ width: `${c.percentage}%` }}
-                    />
+            {data.length > 0 ? (
+              data.map((c) => (
+                <div
+                  key={c.code}
+                  onMouseEnter={() => setHovered(c)}
+                  onMouseLeave={() => setHovered(null)}
+                  className="p-2 rounded bg-[#181818] hover:bg-[#222222] border border-[#262626] flex items-center justify-between text-xs transition cursor-pointer"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-6 h-4 rounded bg-[#2a2a2a] border border-white/10 flex items-center justify-center font-mono text-[9px] font-bold text-white">
+                      {c.code}
+                    </span>
+                    <span className="text-white font-medium text-xs">{c.name}</span>
                   </div>
-                  <span className="text-[10px] text-zinc-500 w-8 text-right">{c.percentage}%</span>
+
+                  <div className="flex items-center gap-3 font-mono">
+                    <span className="text-zinc-300 text-[11px]">{c.visitors.toLocaleString()}</span>
+                    <div className="w-12 bg-[#2a2a2a] h-1.5 rounded-full overflow-hidden">
+                      <div
+                        className="bg-white h-full rounded-full"
+                        style={{ width: `${c.percentage}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] text-zinc-500 w-8 text-right">{c.percentage}%</span>
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="py-8 text-center text-xs text-zinc-500 font-mono">
+                No visitor locations recorded yet.
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>

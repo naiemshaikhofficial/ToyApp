@@ -179,8 +179,8 @@ const SECTIONS: SectionConfig[] = [
     defaultHref: '/news',
     headerTitle: 'Editorial & News',
     subItems: [
-      { label: 'Audio News (Turso)', href: '/news', icon: Newspaper },
-      { label: 'Editorial Blogs', href: '/blogs', icon: BookOpen },
+      { label: 'Audio Deals & News', href: '/news', icon: Newspaper },
+      { label: 'Articles & Guides', href: '/blogs', icon: BookOpen },
       { label: 'Draft Article', href: '/blogs?action=new', icon: PlusCircle },
     ],
   },

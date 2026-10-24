@@ -70,6 +70,20 @@ export interface EcosystemOverviewData {
     badge: string
     href: string
   }>
+  timelines: {
+    days: string[]
+    gmv: number[]
+    orders: number[]
+    platformRevenue: number[]
+    creatorPayouts: number[]
+    aov: number[]
+  }
+  countryTraffic: Array<{
+    code: string
+    name: string
+    visitors: number
+    percentage: number
+  }>
 }
 
 export async function getDashboardAnalyticsAction(): Promise<{
@@ -313,6 +327,69 @@ export async function getDashboardAnalyticsAction(): Promise<{
     // Sort combined activity feed chronologically
     activityFeed.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
 
+    // 7. Compute Real 7-Day Trajectory from Actual DB Purchases
+    const days = 7
+    const dailyMap = new Map<string, { gmv: number; orders: number }>()
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      const dateKey = d.toISOString().split('T')[0]
+      dailyMap.set(dateKey, { gmv: 0, orders: 0 })
+    }
+
+    ;(purchases || []).forEach((p: any) => {
+      if (p.purchased_at) {
+        const dateKey = p.purchased_at.split('T')[0]
+        if (dailyMap.has(dateKey)) {
+          const entry = dailyMap.get(dateKey)!
+          const amount = Number(p.amount_paid || 0)
+          const isINR = (p.currency || 'USD').toUpperCase() === 'INR'
+          entry.gmv += isINR ? amount / 85 : amount
+          entry.orders += 1
+        }
+      }
+    })
+
+    const daysKeys = Array.from(dailyMap.keys())
+    const realGmvTimeline = Array.from(dailyMap.values()).map((v) => Number(v.gmv.toFixed(2)))
+    const realOrdersTimeline = Array.from(dailyMap.values()).map((v) => v.orders)
+    const realPlatformTimeline = realGmvTimeline.map((v) => Number((v * 0.3).toFixed(2)))
+    const realCreatorTimeline = realGmvTimeline.map((v) => Number((v * 0.7).toFixed(2)))
+    const realAovTimeline = Array.from(dailyMap.values()).map((v) =>
+      v.orders > 0 ? Number((v.gmv / v.orders).toFixed(2)) : 0
+    )
+
+    // 8. Compute Real Geolocation Traffic from Profiles & Purchases
+    const { data: profilesList } = await supabase.from('profiles').select('country')
+
+    const countryMap = new Map<string, number>()
+    ;(profilesList || []).forEach((prof: any) => {
+      const countryRaw = prof.country?.trim() || 'Unknown'
+      countryMap.set(countryRaw, (countryMap.get(countryRaw) || 0) + 1)
+    })
+
+    const totalCountrySessions = Array.from(countryMap.values()).reduce((a, b) => a + b, 0)
+    const countryTraffic = Array.from(countryMap.entries())
+      .map(([name, count]) => {
+        const code =
+          name === 'India'
+            ? 'IN'
+            : name === 'United States'
+            ? 'US'
+            : name.slice(0, 2).toUpperCase()
+        const percentage =
+          totalCountrySessions > 0
+            ? Number(((count / totalCountrySessions) * 100).toFixed(1))
+            : 0
+        return {
+          code,
+          name,
+          visitors: count,
+          percentage,
+        }
+      })
+      .sort((a, b) => b.visitors - a.visitors)
+
     return {
       success: true,
       data: {
@@ -345,6 +422,15 @@ export async function getDashboardAnalyticsAction(): Promise<{
         topBrands,
         recentOrders,
         recentActivity: activityFeed.slice(0, 10),
+        timelines: {
+          days: daysKeys,
+          gmv: realGmvTimeline,
+          orders: realOrdersTimeline,
+          platformRevenue: realPlatformTimeline,
+          creatorPayouts: realCreatorTimeline,
+          aov: realAovTimeline,
+        },
+        countryTraffic,
       },
     }
   } catch (err: any) {
