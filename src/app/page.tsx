@@ -29,6 +29,7 @@ import { AreaSparkline, LineSparkline, BarSparkline } from '@/components/ui/char
 import { LiveLineChart } from '@/components/ui/charts/LiveLineChart'
 import { ChoroplethMap } from '@/components/ui/charts/ChoroplethMap'
 import { EcosystemDonutLinkedLegend } from '@/components/ui/charts/EcosystemDonutLinkedLegend'
+import { AudienceStreamRadarCard } from '@/components/ui/charts/AudienceStreamRadarCard'
 
 export const revalidate = 0
 
@@ -218,6 +219,13 @@ export default async function AdminDashboardPage() {
               subtitle: 'Fulfillment checkouts',
             },
           ]}
+        />
+        
+        {/* 2.7 Audience Stream Radar (Bklit UI Composable Radar Chart) */}
+        <AudienceStreamRadarCard
+          totalCustomers={stats?.totalCustomers}
+          totalPurchases={stats?.totalPurchases}
+          activeDevices={stats?.activeDevices}
         />
 
         {/* 3. Customer Support & Inquiries Center */}
