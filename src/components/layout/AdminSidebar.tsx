@@ -297,7 +297,7 @@ export function AdminSidebar({
     <aside
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`relative shrink-0 min-h-screen sticky top-0 h-screen z-40 select-none flex transition-[width] duration-200 ease-out ${
+      className={`relative shrink-0 sticky top-0 h-screen z-40 select-none flex transition-[width] duration-200 ease-out ${
         !isOverview && isPinned ? 'w-[316px]' : 'w-[56px]'
       }`}
     >
@@ -306,7 +306,7 @@ export function AdminSidebar({
          ========================================================================= */}
       <div className="w-[56px] bg-[#101010] border-r border-[#242424] flex flex-col items-center justify-between py-3.5 shrink-0 h-full z-20">
         {/* Top: ProducerToy Mascot */}
-        <div className="flex flex-col items-center gap-3.5">
+        <div className="flex flex-col items-center gap-3.5 shrink-0">
           <Link
             href="/"
             title="Toy App Home"
@@ -327,10 +327,10 @@ export function AdminSidebar({
           </Link>
 
           {/* Clean divider */}
-          <div className="w-6 h-px bg-[#262626]" />
+          <div className="w-6 h-px bg-[#262626] shrink-0" />
 
           {/* Rail Navigation Icons */}
-          <div className="flex flex-col items-center gap-1.5">
+          <div className="flex flex-col items-center gap-1.5 overflow-y-auto no-scrollbar max-h-[calc(100vh-160px)] py-1">
             {SECTIONS.map((sec) => {
               const Icon = sec.icon
               const isActive = activeSection === sec.id
@@ -377,7 +377,7 @@ export function AdminSidebar({
         </div>
 
         {/* Bottom Rail Actions */}
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-2 shrink-0">
           {/* External Store Link */}
           <a
             href="https://producertoy.com"
