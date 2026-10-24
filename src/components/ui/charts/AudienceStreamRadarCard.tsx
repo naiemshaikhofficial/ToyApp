@@ -17,9 +17,6 @@ import {
   Send,
   Globe2,
   Sparkles,
-  Radio,
-  ArrowUpRight,
-  TrendingUp,
 } from "lucide-react";
 
 export interface AudienceStreamInfo {
@@ -190,19 +187,13 @@ export function AudienceStreamRadarCard({
       )}
     >
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#242424]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-[#242424]">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h2 className="text-base font-bold text-white tracking-tight">
-              Where Your Audience Comes From
-            </h2>
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#1c1c1c] border border-[#2a2a2a] text-[10px] font-mono text-[#a1a1aa]">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>LIVE TRAFFIC RADAR</span>
-            </div>
-          </div>
-          <p className="text-xs text-zinc-400 mt-1">
-            Real-time comparative performance across search, social video, producer communities, and direct visits
+          <h2 className="text-base font-bold text-white tracking-tight">
+            Audience Discovery & Traffic
+          </h2>
+          <p className="text-xs text-zinc-400 mt-0.5">
+            Verified acquisition channels across customer registrations and checkouts
           </p>
         </div>
 
@@ -218,40 +209,36 @@ export function AudienceStreamRadarCard({
       {/* Main Grid: Radar on Left, Stream Legend on Right */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         {/* Radar Chart Display (5 cols) */}
-        <div className="lg:col-span-5 flex flex-col items-center justify-center relative min-h-[340px]">
+        <div className="lg:col-span-5 flex flex-col items-center justify-center relative min-h-[320px]">
           <RadarChart
             data={chartData}
             metrics={radarMetrics}
-            size={340}
+            size={320}
             levels={5}
-            margin={52}
+            margin={48}
             hoveredIndex={hoveredIndex}
             onHoverChange={setHoveredIndex}
           >
             <RadarGrid showLabels />
             <RadarAxis />
-            <RadarLabels fontSize={10} offset={22} interactive />
+            <RadarLabels fontSize={10} offset={20} interactive />
             {chartData.map((item, idx) => (
               <RadarArea key={item.label} index={idx} />
             ))}
           </RadarChart>
 
-          {/* Quick instructions / active channel indicator */}
-          <div className="mt-2 text-center">
-            {activeStream ? (
+          {/* Active channel indicator */}
+          <div className="mt-2 min-h-[28px] flex items-center justify-center">
+            {activeStream && (
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#181818] border border-[#2a2a2a] text-xs font-mono">
                 <span
-                  className="w-2.5 h-2.5 rounded-full"
+                  className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: activeStream.color }}
                 />
                 <span className="text-white font-medium">{activeStream.label}</span>
                 <span className="text-zinc-500">•</span>
                 <span className="text-zinc-300">{activeStream.percentage}% share</span>
               </div>
-            ) : (
-              <span className="text-[11px] font-mono text-zinc-500">
-                Hover over any polygon or stream to highlight breakdown
-              </span>
             )}
           </div>
         </div>
@@ -360,18 +347,6 @@ export function AudienceStreamRadarCard({
         </div>
       </div>
 
-      {/* Footer Summary */}
-      <div className="pt-3 border-t border-[#202020] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] font-mono text-zinc-500">
-        <div className="flex items-center gap-2">
-          <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-          <span>
-            Organic Search & YouTube tutorials drive <strong className="text-white">64%</strong> of verified plugin downloads.
-          </span>
-        </div>
-        <div className="text-zinc-600">
-          Telemetry synced with user profile registrations & hardware activations
-        </div>
-      </div>
     </div>
   );
 }
