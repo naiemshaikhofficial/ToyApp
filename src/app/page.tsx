@@ -519,13 +519,13 @@ export default async function AdminDashboardPage() {
         </div>
 
         {/* 6. Multi-Channel Unified Ecosystem Activity Feed */}
-        <div className="epic-card p-6 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-[#2a2a2a]">
+        <div className="epic-card p-5 space-y-3">
+          <div className="flex items-center justify-between pb-2.5 border-b border-[#242424]">
             <div className="flex items-center gap-2">
               <Activity className="w-4 h-4 text-white" />
               <div>
                 <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
-                  Live Multi-Channel Ecosystem Stream
+                  Recent Platform Activity
                 </h3>
                 <p className="text-[11px] text-zinc-400 mt-0.5 font-sans">
                   Real-time events across Customer Orders, Developer Inquiries, DRM Machine Seats & Editorial Deals
@@ -533,25 +533,29 @@ export default async function AdminDashboardPage() {
               </div>
             </div>
 
-            <span className="text-[10px] font-mono px-2 py-0.5 bg-[#202020] border border-[#333] text-zinc-300 rounded">
-              Live Stream
-            </span>
+            <Link
+              href="/activity"
+              className="text-xs font-mono text-zinc-400 hover:text-white flex items-center gap-1 transition"
+            >
+              <span>View Full Analytics Activity</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
 
-          <div className="divide-y divide-[#242424] text-xs">
+          <div className="divide-y divide-[#202020] text-xs">
             {recentActivity && recentActivity.length > 0 ? (
-              recentActivity.map((act) => (
+              recentActivity.slice(0, 4).map((act) => (
                 <div
                   key={act.id}
-                  className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-[#181818]/70 px-2 rounded-lg transition"
+                  className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-[#181818]/70 px-2 rounded-lg transition"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-[#202020] border border-[#333] text-zinc-300 uppercase shrink-0">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-[#202020] border border-[#333] text-zinc-300 uppercase shrink-0">
                       {act.badge}
                     </span>
                     <div className="min-w-0">
-                      <div className="font-semibold text-white truncate">{act.title}</div>
-                      <div className="text-[11px] text-zinc-400 font-mono truncate">{act.subtitle}</div>
+                      <div className="font-semibold text-white truncate text-xs">{act.title}</div>
+                      <div className="text-[10px] text-zinc-400 font-mono truncate">{act.subtitle}</div>
                     </div>
                   </div>
 
@@ -570,143 +574,10 @@ export default async function AdminDashboardPage() {
                 </div>
               ))
             ) : (
-              <div className="py-8 text-center text-zinc-500 font-mono text-xs">
+              <div className="py-6 text-center text-zinc-500 font-mono text-xs">
                 No recent activity recorded.
               </div>
             )}
-          </div>
-        </div>
-
-        {/* 7. 1-Click Executive Launchpad */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-white" />
-            <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
-              Executive Module Launchpad
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 font-mono text-xs">
-            <Link
-              href="/brands"
-              className="p-3.5 rounded-lg bg-[#181818] border border-[#2a2a2a] hover:border-white transition flex flex-col justify-between group"
-            >
-              <Building2 className="w-4 h-4 text-zinc-400 group-hover:text-white transition" />
-              <div className="mt-3">
-                <div className="font-bold text-white">Brands</div>
-                <div className="text-[10px] text-zinc-500">304 Partners</div>
-              </div>
-            </Link>
-
-            <Link
-              href="/products"
-              className="p-3.5 rounded-lg bg-[#181818] border border-[#2a2a2a] hover:border-white transition flex flex-col justify-between group"
-            >
-              <Package className="w-4 h-4 text-zinc-400 group-hover:text-white transition" />
-              <div className="mt-3">
-                <div className="font-bold text-white">Products</div>
-                <div className="text-[10px] text-zinc-500">Catalog Engine</div>
-              </div>
-            </Link>
-
-            <Link
-              href="/orders"
-              className="p-3.5 rounded-lg bg-[#181818] border border-[#2a2a2a] hover:border-white transition flex flex-col justify-between group"
-            >
-              <Receipt className="w-4 h-4 text-zinc-400 group-hover:text-white transition" />
-              <div className="mt-3">
-                <div className="font-bold text-white">Sales & Orders</div>
-                <div className="text-[10px] text-zinc-500">Fulfillment</div>
-              </div>
-            </Link>
-
-            <Link
-              href="/payouts"
-              className="p-3.5 rounded-lg bg-[#181818] border border-[#2a2a2a] hover:border-white transition flex flex-col justify-between group"
-            >
-              <Sparkles className="w-4 h-4 text-zinc-400 group-hover:text-white transition" />
-              <div className="mt-3">
-                <div className="font-bold text-white">Payouts</div>
-                <div className="text-[10px] text-zinc-500">70/30 Split</div>
-              </div>
-            </Link>
-
-            <Link
-              href="/licenses"
-              className="p-3.5 rounded-lg bg-[#181818] border border-[#2a2a2a] hover:border-white transition flex flex-col justify-between group"
-            >
-              <ShieldCheck className="w-4 h-4 text-zinc-400 group-hover:text-white transition" />
-              <div className="mt-3">
-                <div className="font-bold text-white">DRM Licenses</div>
-                <div className="text-[10px] text-zinc-500">Hardware Seats</div>
-              </div>
-            </Link>
-
-            <Link
-              href="/users"
-              className="p-3.5 rounded-lg bg-[#181818] border border-[#2a2a2a] hover:border-white transition flex flex-col justify-between group"
-            >
-              <Users className="w-4 h-4 text-zinc-400 group-hover:text-white transition" />
-              <div className="mt-3">
-                <div className="font-bold text-white">Customers</div>
-                <div className="text-[10px] text-zinc-500">Profiles & Data</div>
-              </div>
-            </Link>
-
-            <Link
-              href="/support"
-              className="p-3.5 rounded-lg bg-[#181818] border border-[#2a2a2a] hover:border-white transition flex flex-col justify-between group"
-            >
-              <LifeBuoy className="w-4 h-4 text-zinc-400 group-hover:text-white transition" />
-              <div className="mt-3">
-                <div className="font-bold text-white">Support Desk</div>
-                <div className="text-[10px] text-zinc-500">Escalations</div>
-              </div>
-            </Link>
-
-            <Link
-              href="/news"
-              className="p-3.5 rounded-lg bg-[#181818] border border-[#2a2a2a] hover:border-white transition flex flex-col justify-between group"
-            >
-              <Newspaper className="w-4 h-4 text-zinc-400 group-hover:text-white transition" />
-              <div className="mt-3">
-                <div className="font-bold text-white">Deals & News</div>
-                <div className="text-[10px] text-zinc-500">160+ Active Deals</div>
-              </div>
-            </Link>
-
-            <Link
-              href="/blogs"
-              className="p-3.5 rounded-lg bg-[#181818] border border-[#2a2a2a] hover:border-white transition flex flex-col justify-between group"
-            >
-              <BookOpen className="w-4 h-4 text-zinc-400 group-hover:text-white transition" />
-              <div className="mt-3">
-                <div className="font-bold text-white">Articles & Guides</div>
-                <div className="text-[10px] text-zinc-500">Tutorials & Articles</div>
-              </div>
-            </Link>
-
-            <Link
-              href="/invoices"
-              className="p-3.5 rounded-lg bg-[#181818] border border-[#2a2a2a] hover:border-white transition flex flex-col justify-between group"
-            >
-              <Receipt className="w-4 h-4 text-zinc-400 group-hover:text-white transition" />
-              <div className="mt-3">
-                <div className="font-bold text-white">Tax Invoices</div>
-                <div className="text-[10px] text-zinc-500">GST / Records</div>
-              </div>
-            </Link>
-
-            <Link
-              href="/staff"
-              className="p-3.5 rounded-lg bg-[#181818] border border-[#2a2a2a] hover:border-white transition flex flex-col justify-between group"
-            >
-              <Users className="w-4 h-4 text-zinc-400 group-hover:text-white transition" />
-              <div className="mt-3">
-                <div className="font-bold text-white">Staff Roles</div>
-                <div className="text-[10px] text-zinc-500">RBAC Controls</div>
-              </div>
-            </Link>
           </div>
         </div>
       </main>
