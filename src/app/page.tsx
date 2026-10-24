@@ -1,7 +1,6 @@
 import { AdminHeader } from '@/components/layout/AdminHeader'
 import { getDashboardAnalyticsAction } from '@/actions/analyticsActions'
 import Link from 'next/link'
-import Image from 'next/image'
 import {
   TrendingUp,
   DollarSign,
@@ -29,6 +28,7 @@ import {
 import { AreaSparkline, LineSparkline, BarSparkline } from '@/components/ui/charts/Sparklines'
 import { LiveLineChart } from '@/components/ui/charts/LiveLineChart'
 import { ChoroplethMap } from '@/components/ui/charts/ChoroplethMap'
+import { EcosystemDonutLinkedLegend } from '@/components/ui/charts/EcosystemDonutLinkedLegend'
 
 export const revalidate = 0
 
@@ -52,46 +52,6 @@ export default async function AdminDashboardPage() {
       />
 
       <main className="p-8 space-y-8 flex-1 max-w-7xl mx-auto w-full">
-        {/* 1. Live Ecosystem Pulse & Infrastructure Health Banner */}
-        <div className="p-4 rounded-xl bg-[#181818] border border-[#2a2a2a] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 font-mono text-xs">
-          <div className="flex items-center gap-3">
-            <Image
-              src="/Manager Bear Dashboard Mascot.png"
-              alt="Toy App Mascot"
-              width={34}
-              height={34}
-              className="w-8 h-8 object-contain filter drop-shadow-sm shrink-0"
-            />
-            <div>
-              <div className="text-white font-bold uppercase tracking-wider flex items-center gap-2">
-                <span>Ecosystem Live Operational Pulse</span>
-                <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-              </div>
-              <div className="text-[11px] text-zinc-400 font-sans mt-0.5">
-                Real-time synchronization across Storefront (producertoy.com) and Creator Portal
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="px-2.5 py-1 rounded-md bg-[#202020] border border-[#333] flex items-center gap-1.5 text-zinc-300">
-              <span className="w-1.5 h-1.5 rounded-full bg-white" />
-              <span>Storefront: Live</span>
-            </div>
-            <div className="px-2.5 py-1 rounded-md bg-[#202020] border border-[#333] flex items-center gap-1.5 text-zinc-300">
-              <span className="w-1.5 h-1.5 rounded-full bg-white" />
-              <span>Toy Creator: Live</span>
-            </div>
-            <div className="px-2.5 py-1 rounded-md bg-[#202020] border border-[#333] flex items-center gap-1.5 text-zinc-300">
-              <span className="w-1.5 h-1.5 rounded-full bg-white" />
-              <span>DRM API: Active</span>
-            </div>
-            <div className="px-2.5 py-1 rounded-md bg-[#202020] border border-[#333] flex items-center gap-1.5 text-zinc-300">
-              <span className="w-1.5 h-1.5 rounded-full bg-white" />
-              <span>Turnstile: Shielded</span>
-            </div>
-          </div>
-        </div>
 
         {/* 2. Executive 70/30 Financial Matrix */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -216,7 +176,50 @@ export default async function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* 3. Action-Required Escalation & Queue Center */}
+        {/* 2.6 Ecosystem Distribution with Bklit UI Linked Legend */}
+        <EcosystemDonutLinkedLegend
+          title="Platform Distribution & Ecosystem Share"
+          subtitle="Real-time accounts, audio brands, and hardware activations with linked interactive breakdown"
+          defaultLabel="Total Accounts"
+          data={[
+            {
+              label: 'Registered Customers',
+              value: stats?.totalCustomers || 0,
+              maxValue: Math.max(10, (stats?.totalCustomers || 0) + (stats?.totalBrands || 0)),
+              color: '#ffffff',
+              subtitle: 'Active storefront accounts',
+            },
+            {
+              label: 'Active Devices',
+              value: stats?.activeDevices || 0,
+              maxValue: Math.max(10, (stats?.totalCustomers || 0) + (stats?.totalBrands || 0)),
+              color: '#e4e4e7',
+              subtitle: 'Workstations with plugin seats',
+            },
+            {
+              label: 'Audio Brands',
+              value: stats?.totalBrands || 0,
+              maxValue: Math.max(10, (stats?.totalCustomers || 0) + (stats?.totalBrands || 0)),
+              color: '#a1a1aa',
+              subtitle: 'Partnered creator brands',
+            },
+            {
+              label: 'Registered Developers',
+              value: stats?.totalBrandMembers || 0,
+              maxValue: Math.max(10, (stats?.totalCustomers || 0) + (stats?.totalBrands || 0)),
+              color: '#71717a',
+              subtitle: 'Brand team members',
+            },
+            {
+              label: 'Completed Orders',
+              value: stats?.totalPurchases || 0,
+              maxValue: Math.max(10, (stats?.totalCustomers || 0) + (stats?.totalBrands || 0)),
+              color: '#52525b',
+              subtitle: 'Fulfillment checkouts',
+            },
+          ]}
+        />
+
         {/* 3. Customer Support & Inquiries Center */}
         <div className="p-5 rounded-xl bg-[#181818] border border-[#2a2a2a] space-y-4">
           <div className="flex items-center justify-between">
