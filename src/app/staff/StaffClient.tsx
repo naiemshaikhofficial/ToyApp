@@ -14,8 +14,9 @@ import {
   Sliders,
   FileCheck2,
 } from 'lucide-react'
-import { StaffMember, StaffRole, ROLE_DEFINITIONS } from '@/lib/auth'
+import { StaffMember, StaffRole, ROLE_DEFINITIONS } from '@/lib/auth-types'
 import { createStaffMemberAction, updateStaffMemberAction } from '@/actions/staffActions'
+import { ParticleButton } from '@/components/ui/ParticleButton'
 
 interface StaffClientProps {
   initialStaff: StaffMember[]
@@ -43,49 +44,47 @@ export function StaffClient({ initialStaff, initialLogs }: StaffClientProps) {
   const [editRole, setEditRole] = useState<StaffRole>('catalog_manager')
   const [editStatus, setEditStatus] = useState<'active' | 'suspended'>('active')
 
-  // Handle Add Staff
-  const handleAddSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    startTransition(async () => {
-      const res = await createStaffMemberAction({
-        ...addForm,
-        authorStaffEmail: 'naiemshaikhofficial@gmail.com',
-      })
-
-      if (res.success && res.staff) {
-        setNotification({ text: `Staff member ${res.staff.email} added successfully!`, type: 'success' })
-        setIsAddOpen(false)
-        setStaffList([res.staff, ...staffList])
-        setAddForm({ email: '', fullName: '', role: 'catalog_manager' })
-      } else {
-        setNotification({ text: res.error || 'Failed to add staff member', type: 'error' })
-      }
+  // Handle Add Staff with Particle Burst Promise
+  const handleAddSubmit = async () => {
+    if (!addForm.email || !addForm.fullName) return
+    const res = await createStaffMemberAction({
+      ...addForm,
+      authorStaffEmail: 'naiemshaikhofficial@gmail.com',
     })
+
+    if (res.success && res.staff) {
+      setNotification({ text: `Staff member ${res.staff.email} added successfully!`, type: 'success' })
+      setStaffList([res.staff, ...staffList])
+      setAddForm({ email: '', fullName: '', role: 'catalog_manager' })
+      setTimeout(() => setIsAddOpen(false), 900)
+      return res
+    } else {
+      setNotification({ text: res.error || 'Failed to add staff member', type: 'error' })
+      throw new Error(res.error || 'Failed to add staff member')
+    }
   }
 
-  // Handle Edit Staff
-  const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  // Handle Edit Staff with Particle Burst Promise
+  const handleEditSubmit = async () => {
     if (!selectedStaff) return
-
-    startTransition(async () => {
-      const res = await updateStaffMemberAction({
-        staffId: selectedStaff.id,
-        role: editRole,
-        status: editStatus,
-        authorStaffEmail: 'naiemshaikhofficial@gmail.com',
-      })
-
-      if (res.success) {
-        setNotification({ text: `Staff role and status updated for ${selectedStaff.email}`, type: 'success' })
-        setSelectedStaff(null)
-        setStaffList((prev) =>
-          prev.map((s) => (s.id === selectedStaff.id ? { ...s, role: editRole, status: editStatus } : s))
-        )
-      } else {
-        setNotification({ text: res.error || 'Failed to update staff member', type: 'error' })
-      }
+    const res = await updateStaffMemberAction({
+      staffId: selectedStaff.id,
+      role: editRole,
+      status: editStatus,
+      authorStaffEmail: 'naiemshaikhofficial@gmail.com',
     })
+
+    if (res.success) {
+      setNotification({ text: `Staff role and status updated for ${selectedStaff.email}`, type: 'success' })
+      setStaffList((prev) =>
+        prev.map((s) => (s.id === selectedStaff.id ? { ...s, role: editRole, status: editStatus } : s))
+      )
+      setTimeout(() => setSelectedStaff(null), 900)
+      return res
+    } else {
+      setNotification({ text: res.error || 'Failed to update staff member', type: 'error' })
+      throw new Error(res.error || 'Failed to update staff member')
+    }
   }
 
   return (
@@ -249,7 +248,7 @@ export function StaffClient({ initialStaff, initialLogs }: StaffClientProps) {
       {/* Add Staff Modal */}
       {isAddOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <form onSubmit={handleAddSubmit} className="epic-card bg-[#181818] max-w-md w-full p-6 space-y-4">
+          <form onSubmit={(e) => { e.preventDefault(); handleAddSubmit(); }} className="epic-card bg-[#181818] max-w-md w-full p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[#2a2a2a]">
               <h3 className="text-sm font-bold uppercase tracking-wider text-white">Add Staff Member</h3>
               <button type="button" onClick={() => setIsAddOpen(false)} className="text-zinc-500 hover:text-white">
@@ -300,9 +299,16 @@ export function StaffClient({ initialStaff, initialLogs }: StaffClientProps) {
               <button type="button" onClick={() => setIsAddOpen(false)} className="epic-btn-outline">
                 Cancel
               </button>
-              <button type="submit" disabled={isPending} className="epic-btn-primary">
-                {isPending ? 'Adding...' : 'Add Staff Member'}
-              </button>
+              <ParticleButton
+                type="submit"
+                variant="primary"
+                pendingLabel="Adding..."
+                successLabel="Added!"
+                errorLabel="Failed"
+                onClick={handleAddSubmit}
+              >
+                Add Staff Member
+              </ParticleButton>
             </div>
           </form>
         </div>
@@ -311,7 +317,7 @@ export function StaffClient({ initialStaff, initialLogs }: StaffClientProps) {
       {/* Edit Staff Modal */}
       {selectedStaff && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <form onSubmit={handleEditSubmit} className="epic-card bg-[#181818] max-w-md w-full p-6 space-y-4">
+          <form onSubmit={(e) => { e.preventDefault(); handleEditSubmit(); }} className="epic-card bg-[#181818] max-w-md w-full p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[#2a2a2a]">
               <h3 className="text-sm font-bold uppercase tracking-wider text-white">
                 Edit Staff: {selectedStaff.full_name}
@@ -356,9 +362,16 @@ export function StaffClient({ initialStaff, initialLogs }: StaffClientProps) {
               <button type="button" onClick={() => setSelectedStaff(null)} className="epic-btn-outline">
                 Cancel
               </button>
-              <button type="submit" disabled={isPending} className="epic-btn-primary">
-                {isPending ? 'Saving...' : 'Update Staff Member'}
-              </button>
+              <ParticleButton
+                type="submit"
+                variant="primary"
+                pendingLabel="Saving..."
+                successLabel="Saved!"
+                errorLabel="Failed"
+                onClick={handleEditSubmit}
+              >
+                Update Staff Member
+              </ParticleButton>
             </div>
           </form>
         </div>
