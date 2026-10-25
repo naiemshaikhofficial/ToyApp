@@ -273,9 +273,9 @@ export async function inviteBrandOwnerAction(params: {
     const staff = await requireAuthenticatedStaff('brands')
     const effectiveStaffEmail = staff.email || params.staffEmail || 'staff@producertoy.com'
     const supabase = getAdminClient()
-    const cleanEmail = params.email.trim().toLowerCase()
-
-    if (!cleanEmail || !cleanEmail.includes('@')) {
+    const cleanEmail = (params.email || '').trim().toLowerCase()
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!cleanEmail || !emailRegex.test(cleanEmail)) {
       return { success: false, error: 'Please provide a valid email address.' }
     }
 
