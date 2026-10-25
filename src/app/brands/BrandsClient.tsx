@@ -21,6 +21,10 @@ import {
   ShieldCheck,
   Clock,
   AlertCircle,
+  Copy,
+  Check,
+  Send,
+  UserCheck,
 } from 'lucide-react'
 import {
   createBrandAction,
@@ -29,6 +33,9 @@ import {
   getBrandsAction,
   getBrandByIdAction,
   toggleBrandVerificationAction,
+  inviteBrandOwnerAction,
+  getBrandOwnerAndInviteStatusAction,
+  revokeBrandInviteAction,
 } from '@/actions/brandActions'
 
 interface BrandsClientProps {
@@ -50,6 +57,15 @@ export function BrandsClient({ initialBrands, totalBrands }: BrandsClientProps) 
   const [selectedBrand, setSelectedBrand] = useState<any | null>(null)
   const [brandProducts, setBrandProducts] = useState<any[]>([])
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
+
+  // Brand Owner & Invite Management State
+  const [brandOwnerData, setBrandOwnerData] = useState<{
+    activeOwner: any | null
+    pendingInvite: any | null
+  }>({ activeOwner: null, pendingInvite: null })
+  const [inviteEmailInput, setInviteEmailInput] = useState('')
+  const [isSendingInvite, setIsSendingInvite] = useState(false)
+  const [copiedLink, setCopiedLink] = useState(false)
 
   // Modals
   const [isCreateOpen, setIsCreateOpen] = useState(false)
@@ -129,6 +145,7 @@ export function BrandsClient({ initialBrands, totalBrands }: BrandsClientProps) 
     country: 'United States',
     logo_url: '',
     revenue_share_percent: 70,
+    owner_email: '',
   })
 
   // Edit Form State
@@ -207,6 +224,10 @@ export function BrandsClient({ initialBrands, totalBrands }: BrandsClientProps) 
   const handleSelectBrand = async (brand: any) => {
     setSelectedBrand(brand)
     setIsLoadingDetail(true)
+    setInviteEmailInput('')
+    setCopiedLink(false)
+
+    // Load brand details and products
     const res = await getBrandByIdAction(brand.id)
     if (res.success && res.brand) {
       setSelectedBrand(res.brand)
@@ -223,7 +244,95 @@ export function BrandsClient({ initialBrands, totalBrands }: BrandsClientProps) 
         revenue_share_percent: res.brand.brand_members?.[0]?.revenue_share_percent || 70,
       })
     }
+
+    // Load active owner and pending invite status
+    try {
+      const statusRes = await getBrandOwnerAndInviteStatusAction(brand.id)
+      if (statusRes.success) {
+        setBrandOwnerData({
+          activeOwner: statusRes.activeOwner,
+          pendingInvite: statusRes.pendingInvite,
+        })
+      } else {
+        setBrandOwnerData({ activeOwner: null, pendingInvite: null })
+      }
+    } catch {
+      setBrandOwnerData({ activeOwner: null, pendingInvite: null })
+    }
+
     setIsLoadingDetail(false)
+  }
+
+  // Handle Copy Invite Link
+  const handleCopyInviteLink = (url: string) => {
+    if (typeof navigator !== 'undefined') {
+      navigator.clipboard.writeText(url)
+      setCopiedLink(true)
+      setTimeout(() => setCopiedLink(false), 2500)
+    }
+  }
+
+  // Handle Send or Resend Owner Invite
+  const handleSendOwnerInvite = async (email: string) => {
+    if (!selectedBrand || !email || !email.includes('@')) {
+      setMessage({ text: 'Please provide a valid email address.', type: 'error' })
+      return
+    }
+    setIsSendingInvite(true)
+    try {
+      const res = await inviteBrandOwnerAction({
+        brandId: selectedBrand.id,
+        email,
+        staffEmail: 'naiemshaikhofficial@gmail.com',
+      })
+      if (res.success) {
+        setMessage({
+          text: `Invitation ${res.emailSent ? 'sent via email' : 'created successfully'} for ${email}!`,
+          type: 'success',
+        })
+        setInviteEmailInput('')
+        // Refresh owner data
+        const statusRes = await getBrandOwnerAndInviteStatusAction(selectedBrand.id)
+        if (statusRes.success) {
+          setBrandOwnerData({
+            activeOwner: statusRes.activeOwner,
+            pendingInvite: statusRes.pendingInvite,
+          })
+        }
+      } else {
+        setMessage({ text: res.error || 'Failed to dispatch invite', type: 'error' })
+      }
+    } catch (err: any) {
+      setMessage({ text: err.message || 'Error dispatching invite', type: 'error' })
+    } finally {
+      setIsSendingInvite(false)
+    }
+  }
+
+  // Handle Revoke Invite
+  const handleRevokeInvite = async (inviteId: string) => {
+    if (!selectedBrand) return
+    try {
+      const res = await revokeBrandInviteAction({
+        inviteId,
+        brandId: selectedBrand.id,
+        staffEmail: 'naiemshaikhofficial@gmail.com',
+      })
+      if (res.success) {
+        setMessage({ text: 'Invitation revoked.', type: 'success' })
+        const statusRes = await getBrandOwnerAndInviteStatusAction(selectedBrand.id)
+        if (statusRes.success) {
+          setBrandOwnerData({
+            activeOwner: statusRes.activeOwner,
+            pendingInvite: statusRes.pendingInvite,
+          })
+        }
+      } else {
+        setMessage({ text: res.error || 'Failed to revoke invite.', type: 'error' })
+      }
+    } catch (err: any) {
+      setMessage({ text: err.message || 'Error revoking invite', type: 'error' })
+    }
   }
 
   // Handle Search
@@ -248,7 +357,11 @@ export function BrandsClient({ initialBrands, totalBrands }: BrandsClientProps) 
         staff_email: 'naiemshaikhofficial@gmail.com',
       })
       if (res.success) {
-        setMessage({ text: `Brand "${createForm.name}" successfully onboarded!`, type: 'success' })
+        let msg = `Brand "${createForm.name}" successfully onboarded!`
+        if (res.inviteInfo?.inviteUrl) {
+          msg += ` Owner invitation sent to ${createForm.owner_email}.`
+        }
+        setMessage({ text: msg, type: 'success' })
         setIsCreateOpen(false)
         setCreateForm({
           name: '',
@@ -259,6 +372,7 @@ export function BrandsClient({ initialBrands, totalBrands }: BrandsClientProps) 
           country: 'United States',
           logo_url: '',
           revenue_share_percent: 70,
+          owner_email: '',
         })
         const reload = await getBrandsAction({ pageSize: 60 })
         if (reload.success) setBrands(reload.data)
@@ -735,6 +849,119 @@ export function BrandsClient({ initialBrands, totalBrands }: BrandsClientProps) 
               </div>
             </div>
 
+            {/* Brand Owner & Creator Portal Invitation */}
+            <div className="p-4 rounded-xl bg-[#141414] border border-[#262626] space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                  <span className="text-[11px] font-mono uppercase font-bold text-white tracking-wider">
+                    Brand Owner Portal &amp; Invitation
+                  </span>
+                </div>
+                {brandOwnerData.activeOwner ? (
+                  <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-white text-black">
+                    OWNER ACTIVE
+                  </span>
+                ) : brandOwnerData.pendingInvite ? (
+                  <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-[#202020] text-zinc-300 border border-[#333]">
+                    INVITE PENDING
+                  </span>
+                ) : (
+                  <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-[#181818] text-zinc-500 border border-[#242424]">
+                    NOT INVITED
+                  </span>
+                )}
+              </div>
+
+              {brandOwnerData.activeOwner ? (
+                <div className="p-3 rounded-lg bg-[#181818] border border-[#2a2a2a] flex items-center justify-between text-xs">
+                  <div>
+                    <div className="font-semibold text-white flex items-center gap-2">
+                      <span>{brandOwnerData.activeOwner.name}</span>
+                      <span className="text-[11px] font-mono text-zinc-400">({brandOwnerData.activeOwner.email})</span>
+                    </div>
+                    <div className="text-[10px] font-mono text-zinc-500 mt-0.5">
+                      Status: {brandOwnerData.activeOwner.status} • Joined: {new Date(brandOwnerData.activeOwner.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#222] text-zinc-300 border border-[#2e2e2e]">
+                      {brandOwnerData.activeOwner.revenueSharePercent}% Share
+                    </span>
+                  </div>
+                </div>
+              ) : brandOwnerData.pendingInvite ? (
+                <div className="p-3 rounded-lg bg-[#181818] border border-[#2a2a2a] space-y-2.5 text-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <div className="font-semibold text-white">{brandOwnerData.pendingInvite.email}</div>
+                      <div className="text-[10px] font-mono text-zinc-500">
+                        Dispatched: {new Date(brandOwnerData.pendingInvite.createdAt).toLocaleDateString()} • Role: Brand Owner
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {brandOwnerData.pendingInvite.inviteUrl && (
+                        <button
+                          type="button"
+                          onClick={() => handleCopyInviteLink(brandOwnerData.pendingInvite.inviteUrl)}
+                          className="px-2.5 py-1 rounded bg-[#222222] hover:bg-[#2c2c2c] border border-[#333333] text-[10px] font-mono text-white transition flex items-center gap-1"
+                        >
+                          {copiedLink ? <Check className="w-3 h-3 text-white" /> : <Copy className="w-3 h-3 text-zinc-400" />}
+                          <span>{copiedLink ? 'Copied' : 'Copy Link'}</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        disabled={isSendingInvite}
+                        onClick={() => handleSendOwnerInvite(brandOwnerData.pendingInvite.email)}
+                        className="px-2.5 py-1 rounded bg-[#222222] hover:bg-[#2c2c2c] border border-[#333333] text-[10px] font-mono text-zinc-300 hover:text-white transition disabled:opacity-50"
+                      >
+                        {isSendingInvite ? 'Sending...' : 'Resend Email'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRevokeInvite(brandOwnerData.pendingInvite.id)}
+                        className="px-2 py-1 rounded bg-[#1a1a1a] hover:bg-[#222] border border-[#2a2a2a] text-[10px] font-mono text-zinc-500 hover:text-zinc-300 transition"
+                        title="Revoke Invitation"
+                      >
+                        Revoke
+                      </button>
+                    </div>
+                  </div>
+                  {brandOwnerData.pendingInvite.inviteUrl && (
+                    <div className="p-2 rounded bg-[#121212] border border-[#222222] font-mono text-[10px] text-zinc-400 truncate">
+                      <span className="text-zinc-500">Link: </span>
+                      <span className="text-zinc-300">{brandOwnerData.pendingInvite.inviteUrl}</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-3 rounded-lg bg-[#181818] border border-[#2a2a2a] space-y-2">
+                  <p className="text-[11px] text-zinc-400 leading-relaxed">
+                    Send an executive invitation to the brand owner. They will receive an email with their secure onboarding link to claim this brand on <strong className="text-white">creators.producertoy.com</strong>.
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="email"
+                      placeholder="e.g. founder@brand.com"
+                      value={inviteEmailInput}
+                      onChange={(e) => setInviteEmailInput(e.target.value)}
+                      className="epic-input text-xs py-1.5 flex-1"
+                    />
+                    <button
+                      type="button"
+                      disabled={isSendingInvite || !inviteEmailInput.trim()}
+                      onClick={() => handleSendOwnerInvite(inviteEmailInput)}
+                      className="px-3.5 py-1.5 rounded-lg bg-white text-black hover:bg-zinc-200 text-xs font-semibold disabled:opacity-40 transition shrink-0 flex items-center gap-1.5"
+                    >
+                      <Send className="w-3 h-3" />
+                      <span>{isSendingInvite ? 'Sending...' : 'Send Owner Invite'}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Brand Catalog Preview */}
             <div>
               <div className="text-xs font-mono uppercase text-zinc-400 font-bold mb-3">
@@ -972,6 +1199,20 @@ export function BrandsClient({ initialBrands, totalBrands }: BrandsClientProps) 
                 placeholder="Professional boutique audio software & sample instruments."
                 value={createForm.description}
                 onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
+                className="epic-input mt-1 text-xs"
+              />
+            </div>
+
+            <div>
+              <label className="text-[11px] font-mono text-zinc-400 uppercase font-semibold flex items-center justify-between">
+                <span>Brand Owner Email</span>
+                <span className="text-[10px] text-zinc-500 font-normal">Optional • Auto-dispatches invite</span>
+              </label>
+              <input
+                type="email"
+                placeholder="founder@brand.com (Sends executive onboarding link)"
+                value={createForm.owner_email}
+                onChange={(e) => setCreateForm({ ...createForm, owner_email: e.target.value })}
                 className="epic-input mt-1 text-xs"
               />
             </div>
