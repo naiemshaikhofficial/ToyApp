@@ -53,8 +53,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen w-full bg-[#121212] overflow-hidden">
-      {/* Persistent Sticky Sidebar */}
+    <div className="flex flex-col md:flex-row h-screen w-full bg-[#121212] overflow-hidden">
+      {/* Persistent Aceternity Expandable Sidebar */}
       <AdminSidebar currentStaffRole={staffInfo.role} currentStaffName={staffInfo.name} />
 
       {/* Primary Page Canvas */}
