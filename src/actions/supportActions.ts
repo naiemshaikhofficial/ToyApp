@@ -21,6 +21,10 @@ export interface SupportTicketSummary {
   description: string
   created_at: string
   updated_at: string
+  brand_id?: string | null
+  product_id?: string | null
+  routing_source?: string | null
+  admin_notes?: string | null
 }
 
 export async function getSupportTicketsAction(params?: {
@@ -208,12 +212,14 @@ export async function replyToTicketAction(
  */
 export async function escalateTicketToDeveloperAction({
   ticketId,
+  brandId,
   brandName,
   developerEmail,
   notes,
   staffEmail,
 }: {
   ticketId: string
+  brandId?: string
   brandName: string
   developerEmail?: string
   notes: string
@@ -224,12 +230,25 @@ export async function escalateTicketToDeveloperAction({
     const effectiveStaffEmail = staff.email || staffEmail || 'staff@producertoy.com'
     const supabase = getAdminClient()
 
-    // 1. Update ticket status to ESCALATED_TO_DEV and priority to HIGH
+    let targetBrandId = brandId
+    if (!targetBrandId && brandName) {
+      const { data: b } = await supabase
+        .from('brands')
+        .select('id')
+        .ilike('name', brandName.trim())
+        .maybeSingle()
+      if (b?.id) targetBrandId = b.id
+    }
+
+    // 1. Update ticket status to ESCALATED_TO_DEV, priority to HIGH, and bind brand_id
     const { error: ticketErr } = await supabase
       .from('support_tickets')
       .update({
         status: 'ESCALATED_TO_DEV',
         priority: 'HIGH',
+        brand_id: targetBrandId || null,
+        routing_source: 'ADMIN_MANUAL',
+        admin_notes: notes.trim(),
         updated_at: new Date().toISOString(),
       })
       .eq('id', ticketId)
@@ -261,7 +280,7 @@ export async function escalateTicketToDeveloperAction({
       action: 'TICKET_ESCALATED_TO_DEV',
       target_type: 'system',
       target_id: ticketId,
-      details: { brandName, developerEmail, notes: notes.slice(0, 60) },
+      details: { brandName, brandId: targetBrandId, developerEmail, notes: notes.slice(0, 60) },
     })
 
     revalidatePath('/support')
@@ -269,6 +288,69 @@ export async function escalateTicketToDeveloperAction({
   } catch (err: any) {
     console.error('escalateTicketToDeveloperAction error:', err)
     return { success: false, error: err.message || 'Failed to escalate ticket to developer' }
+  }
+}
+
+/**
+ * Automatically analyze & route a ticket using Groq AI / Catalog Matching
+ */
+export async function autoRouteTicketWithAIAction(ticketId: string) {
+  try {
+    await requireAuthenticatedStaff('support')
+    const supabase = getAdminClient()
+
+    const { data: ticket, error: tickErr } = await supabase
+      .from('support_tickets')
+      .select('*')
+      .eq('id', ticketId)
+      .single()
+
+    if (tickErr || !ticket) throw new Error('Ticket not found')
+
+    const { analyzeAndRouteTicket } = await import('@/lib/ticketRoutingEngine')
+    const routing = await analyzeAndRouteTicket({
+      subject: ticket.subject,
+      description: ticket.description,
+      daw: ticket.daw,
+      osPlatform: ticket.os_platform,
+    })
+
+    if (routing.isDeveloperProductIssue && routing.brandId) {
+      const { data: brand } = await supabase
+        .from('brands')
+        .select('name')
+        .eq('id', routing.brandId)
+        .single()
+
+      await supabase
+        .from('support_tickets')
+        .update({
+          brand_id: routing.brandId,
+          product_id: routing.productId,
+          routing_source: routing.routingSource,
+          status: 'ESCALATED_TO_DEV',
+          admin_notes: `Auto-routed via ${routing.routingSource}: ${routing.reasoning}`,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', ticketId)
+
+      revalidatePath('/support')
+      return {
+        success: true,
+        routed: true,
+        brandName: brand?.name || 'Developer Brand',
+        reasoning: routing.reasoning,
+      }
+    }
+
+    return {
+      success: true,
+      routed: false,
+      reasoning: routing.reasoning || 'Ticket classified as platform-level inquiry.',
+    }
+  } catch (err: any) {
+    console.error('autoRouteTicketWithAIAction error:', err)
+    return { success: false, error: err.message || 'Auto-routing failed' }
   }
 }
 

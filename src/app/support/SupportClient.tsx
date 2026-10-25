@@ -24,6 +24,7 @@ import {
   Building2,
   Code2,
   Flame,
+  Bot,
 } from 'lucide-react'
 import {
   SupportTicketSummary,
@@ -35,6 +36,7 @@ import {
   escalateTicketToTeamAction,
   deescalateTicketAction,
   getBrandsListForSupportAction,
+  autoRouteTicketWithAIAction,
 } from '@/actions/supportActions'
 
 interface SupportClientProps {
@@ -220,8 +222,10 @@ export function SupportClient({ initialTickets, totalTickets }: SupportClientPro
     if (!selectedTicket || !selectedBrandName || !escalateDevNotes.trim()) return
 
     setIsEscalating(true)
+    const foundBrand = brandsList.find((b) => b.name === selectedBrandName)
     const res = await escalateTicketToDeveloperAction({
       ticketId: selectedTicket.id,
+      brandId: foundBrand?.id,
       brandName: selectedBrandName,
       developerEmail: escalateDevEmail.trim() || undefined,
       notes: escalateDevNotes,
@@ -229,7 +233,7 @@ export function SupportClient({ initialTickets, totalTickets }: SupportClientPro
     })
 
     if (res.success && res.message) {
-      setSelectedTicket({ ...selectedTicket, status: 'ESCALATED_TO_DEV', priority: 'HIGH' })
+      setSelectedTicket({ ...selectedTicket, status: 'ESCALATED_TO_DEV', priority: 'HIGH', brand_id: foundBrand?.id })
       setTicketMessages([...ticketMessages, res.message])
       setShowEscalateDevModal(false)
       setEscalateDevNotes('')
@@ -242,6 +246,32 @@ export function SupportClient({ initialTickets, totalTickets }: SupportClientPro
       setNotification({ text: res.error || 'Failed to escalate to developer', type: 'error' })
     }
     setIsEscalating(false)
+  }
+
+  // 1-Click AI Auto-Route
+  const [isAutoRouting, setIsAutoRouting] = useState(false)
+  const handleAutoRouteWithAI = async () => {
+    if (!selectedTicket) return
+    setIsAutoRouting(true)
+    try {
+      const res = await autoRouteTicketWithAIAction(selectedTicket.id)
+      if (res.success && res.routed) {
+        setNotification({
+          text: `Auto-routed to ${res.brandName} (${res.reasoning})`,
+          type: 'success',
+        })
+        refetchTickets()
+      } else {
+        setNotification({
+          text: res.reasoning || res.error || 'Classified as platform inquiry (no brand match).',
+          type: 'error',
+        })
+      }
+    } catch (err: any) {
+      setNotification({ text: err.message || 'Auto-routing failed', type: 'error' })
+    } finally {
+      setIsAutoRouting(false)
+    }
   }
 
   // Escalate to Core Team Submit
@@ -686,6 +716,18 @@ export function SupportClient({ initialTickets, totalTickets }: SupportClientPro
                 >
                   <ArrowUpRight className="w-3.5 h-3.5" />
                   <span>Escalate to Creator / Brand</span>
+                </button>
+
+                {/* AI Auto-Route Button */}
+                <button
+                  type="button"
+                  onClick={handleAutoRouteWithAI}
+                  disabled={isAutoRouting}
+                  className="px-3 py-1.5 rounded bg-[#1e1e1e] text-zinc-300 hover:text-white hover:bg-[#282828] border border-[#333] text-[11px] font-mono font-bold transition flex items-center gap-1.5"
+                  title="Analyze ticket via Groq AI & match to brand catalog"
+                >
+                  <Bot className="w-3.5 h-3.5" />
+                  <span>{isAutoRouting ? 'AI Analyzing...' : 'AI Auto-Route'}</span>
                 </button>
 
                 {/* Escalate to Core Team Button */}
