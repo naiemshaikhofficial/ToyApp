@@ -176,6 +176,7 @@ export async function upsertAdminProductAction(productData: any, staffEmail?: st
       max_activation_seats: Number(productData.max_activation_seats || 3),
       offline_grace_days: Number(productData.offline_grace_days || 14),
       version: productData.version || '1.0.0',
+      allow_external_url: Boolean(productData.allow_external_url),
       external_url: productData.external_url || null,
       button_text: productData.button_text || null,
       is_active: productData.is_active !== undefined ? productData.is_active : true,

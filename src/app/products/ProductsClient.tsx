@@ -82,6 +82,7 @@ export function ProductsClient({ initialProducts, totalProducts, brands }: Produ
     max_activation_seats: 3,
     offline_grace_days: 14,
     version: '1.0.0',
+    allow_external_url: false,
     external_url: '',
     button_text: '',
     short_description: '',
@@ -145,6 +146,7 @@ export function ProductsClient({ initialProducts, totalProducts, brands }: Produ
         max_activation_seats: p.max_activation_seats || 3,
         offline_grace_days: p.offline_grace_days || 14,
         version: p.version || '1.0.0',
+        allow_external_url: Boolean(p.allow_external_url),
         external_url: p.external_url || '',
         button_text: p.button_text || '',
         short_description: p.short_description || '',
@@ -172,6 +174,7 @@ export function ProductsClient({ initialProducts, totalProducts, brands }: Produ
         max_activation_seats: 3,
         offline_grace_days: 14,
         version: '1.0.0',
+        allow_external_url: false,
         external_url: '',
         button_text: '',
         short_description: '',
@@ -537,40 +540,51 @@ export function ProductsClient({ initialProducts, totalProducts, brands }: Produ
             </div>
 
             {/* Direct Link & Brand Referral Redirect */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-[#2a2a2a] bg-[#121212]/50 p-3 rounded-lg border border-[#222]">
-              <div>
-                <div className="flex items-center gap-1.5 mb-1">
-                  <label className="text-[11px] font-mono text-zinc-300 uppercase font-semibold">Direct Store Link / Referral URL</label>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 font-mono">Optional</span>
+            <div className="space-y-3 pt-2 border-t border-[#2a2a2a] bg-[#121212]/50 p-3.5 rounded-lg border border-[#242424]">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="text-xs font-semibold text-white block">External Referral Allotment</label>
+                  <p className="text-[10px] text-zinc-400 mt-0.5">
+                    Authorize this product to redirect buyers to an external brand website and unlock referral editing in Creator Portal.
+                  </p>
                 </div>
                 <input
-                  type="url"
-                  placeholder="https://brandstore.com/checkout or partner link"
-                  value={productForm.external_url}
-                  onChange={(e) => setProductForm({ ...productForm, external_url: e.target.value })}
-                  className="epic-input text-xs"
+                  type="checkbox"
+                  checked={Boolean(productForm.allow_external_url)}
+                  onChange={(e) => setProductForm({ ...productForm, allow_external_url: e.target.checked })}
+                  className="w-4 h-4 rounded bg-[#181818] border-[#383838] text-white focus:ring-0 cursor-pointer"
                 />
-                <p className="text-[10px] text-zinc-400 mt-1 leading-tight">
-                  Redirects users directly to external checkout/brand store instead of standard cart.
-                </p>
               </div>
 
-              <div>
-                <div className="flex items-center gap-1.5 mb-1">
-                  <label className="text-[11px] font-mono text-zinc-300 uppercase font-semibold">Custom CTA Button Text</label>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 font-mono">Optional</span>
+              {productForm.allow_external_url && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-[#242424]">
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <label className="text-[11px] font-mono text-zinc-300 uppercase font-semibold">Direct Store Link / Referral URL</label>
+                    </div>
+                    <input
+                      type="url"
+                      placeholder="https://brandstore.com/checkout or partner link"
+                      value={productForm.external_url}
+                      onChange={(e) => setProductForm({ ...productForm, external_url: e.target.value })}
+                      className="epic-input text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <label className="text-[11px] font-mono text-zinc-300 uppercase font-semibold">Custom CTA Button Text</label>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="e.g. Get on Brand Website / Buy from Partner"
+                      value={productForm.button_text}
+                      onChange={(e) => setProductForm({ ...productForm, button_text: e.target.value })}
+                      className="epic-input text-xs"
+                    />
+                  </div>
                 </div>
-                <input
-                  type="text"
-                  placeholder="e.g. Get on Brand Website / Buy from Partner"
-                  value={productForm.button_text}
-                  onChange={(e) => setProductForm({ ...productForm, button_text: e.target.value })}
-                  className="epic-input text-xs"
-                />
-                <p className="text-[10px] text-zinc-400 mt-1 leading-tight">
-                  Custom label on storefront product card (Defaults to "Buy on Brand Website").
-                </p>
-              </div>
+              )}
             </div>
 
             {/* Media & Audio URLs */}
