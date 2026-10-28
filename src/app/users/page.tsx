@@ -17,6 +17,7 @@ export default async function UsersPage() {
         <UsersClient
           initialUsers={result.data || []}
           totalUsers={result.total || 0}
+          initialError={result.error}
         />
       </main>
     </div>

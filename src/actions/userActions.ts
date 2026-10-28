@@ -23,12 +23,17 @@ export interface UserSummary {
   created_at: string
   purchase_count: number
   total_spent: number
+  auth_provider?: string
+  auth_providers?: string[]
+  avatar_url?: string | null
+  last_sign_in_at?: string | null
 }
 
 export async function getUsersAction(params?: {
   search?: string
   page?: number
   pageSize?: number
+  provider?: string
 }) {
   try {
     await requireAuthenticatedStaff('users')
@@ -38,18 +43,38 @@ export async function getUsersAction(params?: {
     const from = (page - 1) * pageSize
     const to = from + pageSize - 1
 
+    // First attempt to query comprehensive admin_user_directory view (auth.users + profiles)
     let query = supabase
-      .from('profiles')
+      .from('admin_user_directory')
       .select('*', { count: 'exact' })
+
+    if (params?.provider && params.provider !== 'all') {
+      query = query.eq('auth_provider', params.provider.toLowerCase().trim())
+    }
 
     if (params?.search?.trim()) {
       const term = params.search.trim()
-      query = query.or(`email.ilike.%${term}%,full_name.ilike.%${term}%,city.ilike.%${term}%,country.ilike.%${term}%,phone_number.ilike.%${term}%`)
+      query = query.or(`email.ilike.%${term}%,full_name.ilike.%${term}%,city.ilike.%${term}%,country.ilike.%${term}%,phone_number.ilike.%${term}%,auth_provider.ilike.%${term}%`)
     }
 
     query = query.order('created_at', { ascending: false }).range(from, to)
 
-    const { data, count, error } = await query
+    let { data, count, error } = await query
+
+    // Resilient fallback to profiles if view ever encounters an issue
+    if (error) {
+      console.warn('admin_user_directory query notice, falling back to profiles:', error.message)
+      let fbQuery = supabase.from('profiles').select('*', { count: 'exact' })
+      if (params?.search?.trim()) {
+        const term = params.search.trim()
+        fbQuery = fbQuery.or(`email.ilike.%${term}%,full_name.ilike.%${term}%,city.ilike.%${term}%,country.ilike.%${term}%,phone_number.ilike.%${term}%`)
+      }
+      fbQuery = fbQuery.order('created_at', { ascending: false }).range(from, to)
+      const fbResult = await fbQuery
+      data = fbResult.data
+      count = fbResult.count
+      error = fbResult.error
+    }
 
     if (error) {
       console.error('Error fetching users:', error)
@@ -82,10 +107,20 @@ export async function getUsersAction(params?: {
         return acc + (p.currency === 'INR' ? amt / 85 : amt)
       }, 0)
 
+      // Normalize auth provider: 'google' | 'email'
+      let auth_provider = (u.auth_provider || 'email').toLowerCase()
+      if (Array.isArray(u.auth_providers) && u.auth_providers.length > 0) {
+        if (u.auth_providers.includes('google')) auth_provider = 'google'
+      }
+
       return {
         id: u.id,
-        email: u.email,
+        email: u.email || 'No email',
         full_name: u.full_name || u.display_name || 'Anonymous User',
+        avatar_url: u.avatar_url || null,
+        auth_provider,
+        auth_providers: Array.isArray(u.auth_providers) ? u.auth_providers : [auth_provider],
+        last_sign_in_at: u.last_sign_in_at || null,
         phone_number: u.phone_number,
         address_line1: u.address_line1,
         address_line2: u.address_line2,
@@ -115,15 +150,27 @@ export async function getUserDetailsAction(userId: string) {
     await requireAuthenticatedStaff('users')
     const supabase = getAdminClient()
 
-    // 1. Fetch Profile
-    const { data: profile, error: profErr } = await supabase
-      .from('profiles')
+    // 1. Fetch Profile with auth details
+    let profile: any = null
+    const { data: viewData } = await supabase
+      .from('admin_user_directory')
       .select('*')
       .eq('id', userId)
-      .single()
+      .maybeSingle()
 
-    if (profErr || !profile) {
-      return { success: false, error: 'User profile not found' }
+    if (viewData) {
+      profile = viewData
+    } else {
+      const { data: profFallback, error: profErr } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle()
+
+      if (profErr || !profFallback) {
+        return { success: false, error: 'User profile not found' }
+      }
+      profile = profFallback
     }
 
     // 2. Fetch User Purchases

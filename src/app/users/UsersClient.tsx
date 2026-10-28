@@ -31,11 +31,13 @@ import {
 interface UsersClientProps {
   initialUsers: UserSummary[]
   totalUsers: number
+  initialError?: string
 }
 
-export function UsersClient({ initialUsers, totalUsers }: UsersClientProps) {
+export function UsersClient({ initialUsers, totalUsers, initialError }: UsersClientProps) {
   const [users, setUsers] = useState<UserSummary[]>(initialUsers)
   const [search, setSearch] = useState('')
+  const [providerFilter, setProviderFilter] = useState<'all' | 'google' | 'email'>('all')
   const [isPending, startTransition] = useTransition()
 
   // Pagination
@@ -52,7 +54,9 @@ export function UsersClient({ initialUsers, totalUsers }: UsersClientProps) {
   } | null>(null)
   const [isLoadingDetails, setIsLoadingDetails] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
-  const [notification, setNotification] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
+  const [notification, setNotification] = useState<{ text: string; type: 'success' | 'error' } | null>(
+    initialError ? { text: initialError, type: 'error' } : null
+  )
 
   // Edit Form State
   const [editForm, setEditForm] = useState({
@@ -95,7 +99,7 @@ export function UsersClient({ initialUsers, totalUsers }: UsersClientProps) {
     if (newPage < 1 || newPage > totalPages) return
     setCurrentPage(newPage)
     startTransition(async () => {
-      const res = await getUsersAction({ page: newPage, pageSize, search })
+      const res = await getUsersAction({ page: newPage, pageSize, search, provider: providerFilter })
       if (res.success) {
         setUsers(res.data)
         setTotalCount(res.total)
@@ -109,7 +113,20 @@ export function UsersClient({ initialUsers, totalUsers }: UsersClientProps) {
     e.preventDefault()
     setCurrentPage(1)
     startTransition(async () => {
-      const res = await getUsersAction({ search, page: 1, pageSize })
+      const res = await getUsersAction({ search, page: 1, pageSize, provider: providerFilter })
+      if (res.success) {
+        setUsers(res.data)
+        setTotalCount(res.total)
+      }
+    })
+  }
+
+  // Handle Filter Change
+  const handleProviderFilterChange = (filter: 'all' | 'google' | 'email') => {
+    setProviderFilter(filter)
+    setCurrentPage(1)
+    startTransition(async () => {
+      const res = await getUsersAction({ search, page: 1, pageSize, provider: filter })
       if (res.success) {
         setUsers(res.data)
         setTotalCount(res.total)
@@ -169,7 +186,7 @@ export function UsersClient({ initialUsers, totalUsers }: UsersClientProps) {
           })
         }
         // Refresh users list
-        const listRes = await getUsersAction({ page: currentPage, pageSize, search })
+        const listRes = await getUsersAction({ page: currentPage, pageSize, search, provider: providerFilter })
         if (listRes.success) setUsers(listRes.data)
       } else {
         setNotification({ text: res.error || 'Failed to update profile', type: 'error' })
@@ -180,6 +197,8 @@ export function UsersClient({ initialUsers, totalUsers }: UsersClientProps) {
   // Metrics
   const totalBuyers = users.filter((u) => u.purchase_count > 0).length
   const totalGMV = users.reduce((acc, u) => acc + u.total_spent, 0)
+  const googleUsersCount = users.filter((u) => u.auth_provider === 'google').length
+  const emailUsersCount = users.filter((u) => u.auth_provider === 'email').length
 
   return (
     <div className="space-y-6">
@@ -212,38 +231,92 @@ export function UsersClient({ initialUsers, totalUsers }: UsersClientProps) {
 
         <div className="epic-card p-5 space-y-1">
           <div className="flex items-center justify-between text-zinc-400">
-            <span className="text-[11px] font-mono uppercase tracking-wider font-semibold">Paying Customers</span>
-            <ShoppingBag className="w-4 h-4" />
+            <span className="text-[11px] font-mono uppercase tracking-wider font-semibold">Auth Channels</span>
+            <ShieldCheck className="w-4 h-4" />
           </div>
-          <div className="text-2xl font-black text-white">{totalBuyers}</div>
-          <p className="text-[11px] text-zinc-500">Accounts with at least 1 verified purchase</p>
+          <div className="flex items-center gap-3 pt-0.5">
+            <div className="text-base font-black text-white font-mono flex items-center gap-1.5">
+              <svg className="w-3.5 h-3.5 fill-current text-white shrink-0" viewBox="0 0 24 24">
+                <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
+              </svg>
+              <span>{googleUsersCount} Google</span>
+            </div>
+            <span className="text-zinc-600">•</span>
+            <div className="text-base font-black text-zinc-300 font-mono flex items-center gap-1.5">
+              <Mail className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+              <span>{emailUsersCount} Email</span>
+            </div>
+          </div>
+          <p className="text-[11px] text-zinc-500">Live authentication provider telemetry</p>
         </div>
 
         <div className="epic-card p-5 space-y-1">
           <div className="flex items-center justify-between text-zinc-400">
-            <span className="text-[11px] font-mono uppercase tracking-wider font-semibold">Cumulative Spend</span>
+            <span className="text-[11px] font-mono uppercase tracking-wider font-semibold">Paying Customers &amp; Spend</span>
             <Wallet className="w-4 h-4" />
           </div>
-          <div className="text-2xl font-black text-white">${totalGMV.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-          <p className="text-[11px] text-zinc-500">Current visible page volume</p>
+          <div className="text-2xl font-black text-white">
+            ${totalGMV.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+          </div>
+          <p className="text-[11px] text-zinc-500">{totalBuyers} customers with &gt;= 1 purchase</p>
         </div>
       </div>
 
-      {/* Search & Action Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <form onSubmit={handleSearchSubmit} className="flex-1 w-full max-w-md relative">
+      {/* Filter Tabs & Search Bar */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+        {/* Search Bar */}
+        <form onSubmit={handleSearchSubmit} className="flex-1 max-w-md relative">
           <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search by customer name, email, phone, city, country..."
+            placeholder="Search customer, email, auth (google/email), country..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="epic-input pl-9"
+            className="epic-input pl-9 text-xs"
           />
         </form>
 
-        <div className="text-xs font-mono text-zinc-400">
-          Showing {users.length} of {totalCount} Customers
+        {/* Auth Provider Segmented Filters */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => handleProviderFilterChange('all')}
+            disabled={isPending}
+            className={`px-3 py-1.5 rounded text-xs font-mono font-semibold transition ${
+              providerFilter === 'all'
+                ? 'bg-white text-black shadow-sm'
+                : 'bg-[#181818] border border-[#2a2a2a] text-zinc-400 hover:text-white hover:bg-[#202020]'
+            }`}
+          >
+            All Accounts ({totalCount})
+          </button>
+
+          <button
+            onClick={() => handleProviderFilterChange('google')}
+            disabled={isPending}
+            className={`px-3 py-1.5 rounded text-xs font-mono font-semibold transition flex items-center gap-1.5 ${
+              providerFilter === 'google'
+                ? 'bg-white text-black shadow-sm'
+                : 'bg-[#181818] border border-[#2a2a2a] text-zinc-400 hover:text-white hover:bg-[#202020]'
+            }`}
+          >
+            <svg className="w-3 h-3 fill-current shrink-0" viewBox="0 0 24 24">
+              <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
+            </svg>
+            <span>Google Auth</span>
+          </button>
+
+          <button
+            onClick={() => handleProviderFilterChange('email')}
+            disabled={isPending}
+            className={`px-3 py-1.5 rounded text-xs font-mono font-semibold transition flex items-center gap-1.5 ${
+              providerFilter === 'email'
+                ? 'bg-white text-black shadow-sm'
+                : 'bg-[#181818] border border-[#2a2a2a] text-zinc-400 hover:text-white hover:bg-[#202020]'
+            }`}
+          >
+            <Mail className="w-3 h-3 shrink-0" />
+            <span>Email Auth</span>
+          </button>
         </div>
       </div>
 
@@ -254,6 +327,7 @@ export function UsersClient({ initialUsers, totalUsers }: UsersClientProps) {
             <thead className="bg-[#181818] text-zinc-400 font-mono uppercase text-[10px] border-b border-[#2a2a2a]">
               <tr>
                 <th className="py-3 px-4">Customer</th>
+                <th className="py-3 px-3">Auth / Source</th>
                 <th className="py-3 px-3">Location / Country</th>
                 <th className="py-3 px-3">Phone</th>
                 <th className="py-3 px-3 text-right">Orders</th>
@@ -263,61 +337,117 @@ export function UsersClient({ initialUsers, totalUsers }: UsersClientProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#2a2a2a]">
-              {users.map((u) => {
-                const initials = (u.full_name || u.email).slice(0, 2).toUpperCase()
-                return (
-                  <tr
-                    key={u.id}
-                    onClick={() => handleSelectUser(u)}
-                    className="hover:bg-[#181818]/60 transition cursor-pointer"
-                  >
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-[#202020] border border-[#2a2a2a] flex items-center justify-center font-bold text-xs text-white shrink-0">
-                          {initials}
+              {users.length > 0 ? (
+                users.map((u) => {
+                  const initials = (u.full_name || u.email).slice(0, 2).toUpperCase()
+                  return (
+                    <tr
+                      key={u.id}
+                      onClick={() => handleSelectUser(u)}
+                      className="hover:bg-[#181818]/60 transition cursor-pointer"
+                    >
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-3">
+                          {u.avatar_url ? (
+                            <img
+                              src={u.avatar_url}
+                              alt={u.full_name || 'Customer'}
+                              referrerPolicy="no-referrer"
+                              className="w-8 h-8 rounded-full object-cover shrink-0 border border-[#2a2a2a]"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-[#202020] border border-[#2a2a2a] flex items-center justify-center font-bold text-xs text-white shrink-0">
+                              {initials}
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <div className="font-bold text-white text-xs truncate">{u.full_name}</div>
+                            <div className="text-[11px] text-zinc-400 font-mono truncate">{u.email}</div>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <div className="font-bold text-white text-xs truncate">{u.full_name}</div>
-                          <div className="text-[11px] text-zinc-400 font-mono truncate">{u.email}</div>
-                        </div>
+                      </td>
+
+                      <td className="py-3.5 px-3">
+                        {u.auth_provider === 'google' ? (
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-[#202020] text-white border border-[#333333]">
+                            <svg className="w-3 h-3 fill-current text-white shrink-0" viewBox="0 0 24 24">
+                              <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
+                            </svg>
+                            <span>Google</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-[#181818] text-zinc-300 border border-[#2a2a2a]">
+                            <Mail className="w-3 h-3 text-zinc-400 shrink-0" />
+                            <span>Email</span>
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="py-3.5 px-3">
+                        <div className="text-zinc-300 font-medium">{u.country || 'Global / Web'}</div>
+                        <div className="text-[10px] text-zinc-500 font-mono">{u.city || 'No city listed'}</div>
+                      </td>
+
+                      <td className="py-3.5 px-3 font-mono text-[11px] text-zinc-400">
+                        {u.phone_number || '—'}
+                      </td>
+
+                      <td className="py-3.5 px-3 text-right font-mono font-bold text-white">
+                        {u.purchase_count}
+                      </td>
+
+                      <td className="py-3.5 px-3 text-right font-mono font-bold text-white">
+                        ${u.total_spent.toFixed(2)}
+                      </td>
+
+                      <td className="py-3.5 px-3 font-mono text-[11px] text-zinc-400">
+                        {new Date(u.created_at).toLocaleDateString()}
+                      </td>
+
+                      <td className="py-3.5 px-4 text-right">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleSelectUser(u)
+                          }}
+                          className="px-2.5 py-1 rounded bg-[#202020] hover:bg-[#2a2a2a] text-zinc-300 hover:text-white border border-[#2a2a2a] text-[11px] font-mono transition"
+                        >
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })
+              ) : (
+                <tr>
+                  <td colSpan={8} className="py-16 text-center">
+                    <div className="flex flex-col items-center justify-center space-y-3 text-zinc-500">
+                      <div className="w-12 h-12 rounded-full bg-[#181818] border border-[#2a2a2a] flex items-center justify-center text-zinc-400">
+                        <Users className="w-6 h-6" />
                       </div>
-                    </td>
-
-                    <td className="py-3.5 px-3">
-                      <div className="text-zinc-300 font-medium">{u.country || 'Global / Web'}</div>
-                      <div className="text-[10px] text-zinc-500 font-mono">{u.city || 'No city listed'}</div>
-                    </td>
-
-                    <td className="py-3.5 px-3 font-mono text-[11px] text-zinc-400">
-                      {u.phone_number || '—'}
-                    </td>
-
-                    <td className="py-3.5 px-3 text-right font-mono font-bold text-white">
-                      {u.purchase_count}
-                    </td>
-
-                    <td className="py-3.5 px-3 text-right font-mono font-bold text-white">
-                      ${u.total_spent.toFixed(2)}
-                    </td>
-
-                    <td className="py-3.5 px-3 font-mono text-[11px] text-zinc-400">
-                      {new Date(u.created_at).toLocaleDateString()}
-                    </td>
-
-                    <td className="py-3.5 px-4 text-right">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleSelectUser(u)
-                        }}
-                        className="px-2.5 py-1 rounded bg-[#202020] hover:bg-[#2a2a2a] text-zinc-300 hover:text-white border border-[#2a2a2a] text-[11px] font-mono transition"
-                      >
-                        View Details
-                      </button>
-                    </td>
-                  </tr>
-                )
-              })}
+                      <div className="text-sm font-semibold text-zinc-300 font-mono">No customer accounts found</div>
+                      <p className="text-xs text-zinc-500 max-w-sm leading-relaxed">
+                        {search
+                          ? `No accounts matched "${search}". Try checking your search term or resetting filters.`
+                          : providerFilter !== 'all'
+                          ? `No customer accounts found matching the "${providerFilter.toUpperCase()}" authentication channel.`
+                          : 'No registered customer directory records found.'}
+                      </p>
+                      {(search || providerFilter !== 'all') && (
+                        <button
+                          onClick={() => {
+                            setSearch('')
+                            handleProviderFilterChange('all')
+                          }}
+                          className="px-3 py-1.5 rounded bg-[#202020] hover:bg-[#262626] text-white border border-[#333333] text-xs font-mono transition"
+                        >
+                          Clear Filters &amp; Show All
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -385,15 +515,46 @@ export function UsersClient({ initialUsers, totalUsers }: UsersClientProps) {
             {/* Header */}
             <div className="flex items-start justify-between pb-4 border-b border-[#2a2a2a]">
               <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-full bg-[#202020] border border-white/10 flex items-center justify-center text-sm font-bold text-white shrink-0">
-                  {(selectedUser.full_name || selectedUser.email).slice(0, 2).toUpperCase()}
-                </div>
+                {selectedUser.avatar_url ? (
+                  <img
+                    src={selectedUser.avatar_url}
+                    alt={selectedUser.full_name || 'Customer'}
+                    referrerPolicy="no-referrer"
+                    className="w-12 h-12 rounded-full object-cover shrink-0 border border-white/10"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-[#202020] border border-white/10 flex items-center justify-center text-sm font-bold text-white shrink-0">
+                    {(selectedUser.full_name || selectedUser.email).slice(0, 2).toUpperCase()}
+                  </div>
+                )}
                 <div>
                   <h3 className="text-base font-extrabold text-white">{selectedUser.full_name}</h3>
                   <div className="text-xs font-mono text-zinc-400 flex items-center gap-2 mt-0.5">
                     <span>{selectedUser.email}</span>
                     <span>•</span>
                     <span className="text-zinc-500">ID: {selectedUser.id.slice(0, 8)}...</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-[#202020] text-zinc-200 border border-[#333333]">
+                      {selectedUser.auth_provider === 'google' ? (
+                        <>
+                          <svg className="w-3 h-3 fill-current text-white shrink-0" viewBox="0 0 24 24">
+                            <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
+                          </svg>
+                          <span>Google Account (OAuth 2.0)</span>
+                        </>
+                      ) : (
+                        <>
+                          <Mail className="w-3 h-3 text-zinc-400 shrink-0" />
+                          <span>Email &amp; Password</span>
+                        </>
+                      )}
+                    </span>
+                    {selectedUser.last_sign_in_at && (
+                      <span className="text-[10px] font-mono text-zinc-400">
+                        Active: {new Date(selectedUser.last_sign_in_at).toLocaleDateString()}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
