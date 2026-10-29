@@ -179,6 +179,7 @@ export async function upsertAdminProductAction(productData: any, staffEmail?: st
       allow_external_url: Boolean(productData.allow_external_url),
       external_url: productData.external_url || null,
       button_text: productData.button_text || null,
+      affiliate_disclosure: Boolean(productData.affiliate_disclosure),
       is_active: productData.is_active !== undefined ? productData.is_active : true,
       updated_at: new Date().toISOString(),
     }

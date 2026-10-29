@@ -85,6 +85,7 @@ export function ProductsClient({ initialProducts, totalProducts, brands }: Produ
     allow_external_url: false,
     external_url: '',
     button_text: '',
+    affiliate_disclosure: false,
     short_description: '',
     full_description: '',
     is_active: true,
@@ -149,6 +150,7 @@ export function ProductsClient({ initialProducts, totalProducts, brands }: Produ
         allow_external_url: Boolean(p.allow_external_url),
         external_url: p.external_url || '',
         button_text: p.button_text || '',
+        affiliate_disclosure: Boolean(p.affiliate_disclosure),
         short_description: p.short_description || '',
         full_description: p.full_description || '',
         is_active: p.is_active ?? true,
@@ -177,6 +179,7 @@ export function ProductsClient({ initialProducts, totalProducts, brands }: Produ
         allow_external_url: false,
         external_url: '',
         button_text: '',
+        affiliate_disclosure: false,
         short_description: '',
         full_description: '',
         is_active: true,
@@ -557,31 +560,50 @@ export function ProductsClient({ initialProducts, totalProducts, brands }: Produ
               </div>
 
               {productForm.allow_external_url && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-[#242424]">
-                  <div>
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <label className="text-[11px] font-mono text-zinc-300 uppercase font-semibold">Direct Store Link / Referral URL</label>
+                <div className="space-y-3 pt-2 border-t border-[#242424]">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <label className="text-[11px] font-mono text-zinc-300 uppercase font-semibold">Direct Store Link / Referral URL</label>
+                      </div>
+                      <input
+                        type="url"
+                        placeholder="https://brandstore.com/checkout or partner link"
+                        value={productForm.external_url}
+                        onChange={(e) => setProductForm({ ...productForm, external_url: e.target.value })}
+                        className="epic-input text-xs"
+                      />
                     </div>
-                    <input
-                      type="url"
-                      placeholder="https://brandstore.com/checkout or partner link"
-                      value={productForm.external_url}
-                      onChange={(e) => setProductForm({ ...productForm, external_url: e.target.value })}
-                      className="epic-input text-xs"
-                    />
+
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <label className="text-[11px] font-mono text-zinc-300 uppercase font-semibold">Custom CTA Button Text</label>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="e.g. Get on Brand Website / Buy from Partner"
+                        value={productForm.button_text}
+                        onChange={(e) => setProductForm({ ...productForm, button_text: e.target.value })}
+                        className="epic-input text-xs"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <label className="text-[11px] font-mono text-zinc-300 uppercase font-semibold">Custom CTA Button Text</label>
-                    </div>
+                  {/* Affiliate Disclosure Tick Mark */}
+                  <div className="pt-2 border-t border-[#1f1f1f] flex items-start gap-2.5">
                     <input
-                      type="text"
-                      placeholder="e.g. Get on Brand Website / Buy from Partner"
-                      value={productForm.button_text}
-                      onChange={(e) => setProductForm({ ...productForm, button_text: e.target.value })}
-                      className="epic-input text-xs"
+                      type="checkbox"
+                      id="adminAffiliateDisclosure"
+                      checked={Boolean(productForm.affiliate_disclosure)}
+                      onChange={(e) => setProductForm({ ...productForm, affiliate_disclosure: e.target.checked })}
+                      className="mt-0.5 w-4 h-4 rounded bg-[#181818] border-[#383838] text-white focus:ring-0 cursor-pointer"
                     />
+                    <label htmlFor="adminAffiliateDisclosure" className="text-xs text-zinc-300 cursor-pointer select-none">
+                      <span className="font-semibold text-white block">Affiliate Disclosure</span>
+                      <span className="text-[10px] text-zinc-400 block mt-0.5 leading-relaxed">
+                        ProducerToy may earn a commission if you purchase {productForm.name || 'Groove Console'} through this link. This does not increase the price you pay.
+                      </span>
+                    </label>
                   </div>
                 </div>
               )}
