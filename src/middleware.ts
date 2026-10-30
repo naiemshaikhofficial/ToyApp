@@ -13,11 +13,11 @@ interface RateLimitEntry {
 const rateLimitStore = new Map<string, RateLimitEntry>()
 
 const RATE_LIMITS = {
-  general: { maxRequests: 120, windowMs: 60 * 1000 },
-  sensitive: { maxRequests: 25, windowMs: 60 * 1000 }, // strict 25 req/min on login & admin actions
+  general: { maxRequests: 240, windowMs: 60 * 1000 },
+  sensitive: { maxRequests: 60, windowMs: 60 * 1000 }, // 60 req/min on mutations & sensitive actions
 }
 
-const SENSITIVE_PATTERNS = ['/login', '/forgot-password', '/reset-password', '/api/']
+const SENSITIVE_PATTERNS = ['/api/auth', '/api/license']
 
 let lastCleanup = Date.now()
 const CLEANUP_INTERVAL = 5 * 60 * 1000
@@ -74,24 +74,27 @@ export async function middleware(request: NextRequest) {
     request.headers.get('cf-connecting-ip') ||
     '127.0.0.1'
 
+  const isApi = pathname.startsWith('/api')
   const isServerAction = request.headers.has('next-action') || request.method === 'POST'
-  const isSensitive = isServerAction || SENSITIVE_PATTERNS.some((p) => pathname.startsWith(p))
 
-  const rateLimit = checkRateLimit(ip, isSensitive)
-  if (!rateLimit.allowed) {
-    return new NextResponse(
-      JSON.stringify({
-        error: 'Too Many Requests',
-        message: 'Administrative request threshold exceeded. Please try again later.',
-      }),
-      {
-        status: 429,
-        headers: {
-          'Content-Type': 'application/json',
-          'Retry-After': Math.ceil(rateLimit.resetIn / 1000).toString(),
-        },
-      }
-    )
+  if (isApi || isServerAction) {
+    const isSensitive = isServerAction || SENSITIVE_PATTERNS.some((p) => pathname.startsWith(p))
+    const rateLimit = checkRateLimit(ip, isSensitive)
+    if (!rateLimit.allowed) {
+      return new NextResponse(
+        JSON.stringify({
+          error: 'Too Many Requests',
+          message: 'Administrative request threshold exceeded. Please try again later.',
+        }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'Retry-After': Math.ceil(rateLimit.resetIn / 1000).toString(),
+          },
+        }
+      )
+    }
   }
 
   // 2. Public auth routes (do not require session)
