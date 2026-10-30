@@ -51,12 +51,6 @@ export async function updateSession(request: NextRequest) {
       ) {
         const payload = c.value.substring(7)
         if (!isValidBase64Url(payload)) {
-          // Expire corrupted/legacy cookie on client browser
-          supabaseResponse.cookies.set(c.name, '', {
-            path: '/',
-            maxAge: 0,
-            domain: isProdHost ? '.producertoy.com' : undefined,
-          })
           return false
         }
       }

@@ -103,32 +103,28 @@ export async function middleware(request: NextRequest) {
     pathname === '/forgot-password' ||
     pathname === '/reset-password'
 
-  // 3. Automatic Supabase Session Synchronization & Token Refresh
-  let supabaseResponse = NextResponse.next({ request })
-  let user = null
-  try {
-    const sessionResult = await updateSession(request)
-    supabaseResponse = sessionResult.supabaseResponse
-    user = sessionResult.user
-  } catch (syncErr) {
-    console.error('Middleware updateSession unexpected error:', syncErr)
-  }
-
+  // 3. Admin Authentication Route Guard
   const hasSessionCookie = request.cookies
     .getAll()
     .some((c) => c.name.startsWith('sb-') || c.name.includes('-auth-token'))
 
-  // Guard protected admin routes: if no cookie exists or session is expired, redirect to /login
+  // Guard protected admin routes: if no session cookie exists, redirect to /login
   if (!isPublicAuthRoute && !pathname.startsWith('/api/')) {
-    if (!hasSessionCookie || !user) {
+    if (!hasSessionCookie) {
       const loginUrl = new URL('/login', request.url)
       loginUrl.searchParams.set('redirect', pathname)
-      const redirectResponse = NextResponse.redirect(loginUrl)
-      // Carry over any cookie updates (such as expired bad cookies or refreshed tokens)
-      supabaseResponse.cookies.getAll().forEach((cookie) => {
-        redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
-      })
-      return redirectResponse
+      return NextResponse.redirect(loginUrl)
+    }
+  }
+
+  // Background session synchronization if session cookies exist
+  let supabaseResponse = NextResponse.next({ request })
+  if (hasSessionCookie) {
+    try {
+      const sessionResult = await updateSession(request)
+      supabaseResponse = sessionResult.supabaseResponse
+    } catch (syncErr) {
+      console.warn('Middleware updateSession fallback:', syncErr)
     }
   }
 
