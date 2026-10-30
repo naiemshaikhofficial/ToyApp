@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { updateSession } from '@/lib/supabase/middleware'
 
 // ============================================================================
 // RATE LIMITING CONFIGURATION (Edge-compatible, in-memory)
@@ -99,15 +100,20 @@ export async function middleware(request: NextRequest) {
     pathname === '/forgot-password' ||
     pathname === '/reset-password'
 
-  // 3. Admin Authentication Route Guard
+  // 3. Automatic Supabase Session Synchronization & Token Refresh
+  const { supabaseResponse, user } = await updateSession(request)
+
   const hasSessionCookie = request.cookies
     .getAll()
     .some((c) => c.name.startsWith('sb-') || c.name.includes('-auth-token'))
 
-  if (!isPublicAuthRoute && !hasSessionCookie) {
-    const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(loginUrl)
+  // Guard protected admin routes: if no cookie exists or session is expired, redirect to /login
+  if (!isPublicAuthRoute && !pathname.startsWith('/api/')) {
+    if (!hasSessionCookie || !user) {
+      const loginUrl = new URL('/login', request.url)
+      loginUrl.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
   }
 
   // 4. CORS handling for admin API routes
@@ -137,7 +143,7 @@ export async function middleware(request: NextRequest) {
     })
   }
 
-  const response = NextResponse.next()
+  const response = supabaseResponse
 
   // Strict administrative security headers
   response.headers.set('X-Frame-Options', 'DENY')
