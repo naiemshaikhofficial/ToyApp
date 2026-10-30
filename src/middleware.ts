@@ -101,7 +101,15 @@ export async function middleware(request: NextRequest) {
     pathname === '/reset-password'
 
   // 3. Automatic Supabase Session Synchronization & Token Refresh
-  const { supabaseResponse, user } = await updateSession(request)
+  let supabaseResponse = NextResponse.next({ request })
+  let user = null
+  try {
+    const sessionResult = await updateSession(request)
+    supabaseResponse = sessionResult.supabaseResponse
+    user = sessionResult.user
+  } catch (syncErr) {
+    console.error('Middleware updateSession unexpected error:', syncErr)
+  }
 
   const hasSessionCookie = request.cookies
     .getAll()
@@ -112,7 +120,12 @@ export async function middleware(request: NextRequest) {
     if (!hasSessionCookie || !user) {
       const loginUrl = new URL('/login', request.url)
       loginUrl.searchParams.set('redirect', pathname)
-      return NextResponse.redirect(loginUrl)
+      const redirectResponse = NextResponse.redirect(loginUrl)
+      // Carry over any cookie updates (such as expired bad cookies or refreshed tokens)
+      supabaseResponse.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+      })
+      return redirectResponse
     }
   }
 
@@ -166,6 +179,6 @@ export const config = {
     /*
      * Match all admin paths except static Next.js assets, favicons, mascots, etc.
      */
-    '/((?!_next/static|_next/image|favicon.ico|Manager Bear Dashboard Mascot.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 }
