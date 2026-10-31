@@ -67,8 +67,9 @@ export default function LoginPage() {
         throw new Error(error.message)
       }
 
-      router.push('/')
-      router.refresh()
+      // Hard navigation ensures cross-subdomain cookies (.producertoy.com) are committed before request
+      const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || '/'
+      window.location.href = redirectUrl
     } catch (err: any) {
       console.error('Login error:', err)
       setErrorMsg(err.message || 'Invalid credentials. Please verify your email and password.')

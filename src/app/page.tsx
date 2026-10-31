@@ -1,5 +1,6 @@
 import { AdminHeader } from '@/components/layout/AdminHeader'
 import { getDashboardAnalyticsAction } from '@/actions/analyticsActions'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import {
   TrendingUp,
@@ -35,6 +36,9 @@ export const revalidate = 0
 
 export default async function AdminDashboardPage() {
   const result = await getDashboardAnalyticsAction()
+  if (!result.success && result.error && result.error.toLowerCase().includes('unauthorized')) {
+    redirect('/login')
+  }
   const data = result.data
 
   const stats = data?.stats

@@ -2,6 +2,10 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { cache } from 'react'
 
+function isValidBase64Url(str: string): boolean {
+  return /^[A-Za-z0-9_-]+$/.test(str)
+}
+
 export const createClient = cache(async () => {
   const cookieStore = await cookies()
 
@@ -12,10 +16,26 @@ export const createClient = cache(async () => {
     throw new Error('Missing Supabase environment variables: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be defined.')
   }
 
+  // Filter out malformed or legacy tokens containing '.' or invalid Base64URL characters
+  const rawCookies = cookieStore.getAll()
+  const sanitizedCookies = rawCookies.filter((c) => {
+    if (
+      (c.name.startsWith('sb-') || c.name.includes('-auth-token')) &&
+      typeof c.value === 'string' &&
+      c.value.startsWith('base64-')
+    ) {
+      const payload = c.value.substring(7)
+      if (!isValidBase64Url(payload)) {
+        return false
+      }
+    }
+    return true
+  })
+
   return createServerClient(url, key, {
     cookies: {
       getAll() {
-        return cookieStore.getAll()
+        return sanitizedCookies
       },
       setAll(cookiesToSet) {
         try {
@@ -46,6 +66,7 @@ export const getUser = cache(async () => {
     const supabase = await createClient()
     return await supabase.auth.getUser()
   } catch (err) {
+    console.warn('[SERVER_AUTH_GETUSER_ERROR]', err)
     return { data: { user: null }, error: err }
   }
 })
