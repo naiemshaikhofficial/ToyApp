@@ -16,9 +16,21 @@ export const createClient = cache(async () => {
     throw new Error('Missing Supabase environment variables: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be defined.')
   }
 
-  // Filter out malformed or legacy tokens containing '.' or invalid Base64URL characters
   const rawCookies = cookieStore.getAll()
-  const sanitizedCookies = rawCookies.filter((c) => {
+
+  // 1. Detect if chunked cookies exist (.0). If so, drop any unchunked stale cookie with same root name
+  const chunkedRoots = new Set(
+    rawCookies
+      .filter((c) => c.name.match(/^(.*)\.0$/))
+      .map((c) => c.name.replace(/\.0$/, ''))
+  )
+
+  // 2. Filter out corrupt Base64URL payloads and stale unchunked cookies
+  const filtered = rawCookies.filter((c) => {
+    if (chunkedRoots.has(c.name)) {
+      return false
+    }
+
     if (
       (c.name.startsWith('sb-') || c.name.includes('-auth-token')) &&
       typeof c.value === 'string' &&
@@ -32,7 +44,22 @@ export const createClient = cache(async () => {
     return true
   })
 
+  // 3. Deduplicate cookies with identical names (preferring latest set)
+  const cookieMap = new Map<string, (typeof rawCookies)[0]>()
+  for (const c of filtered) {
+    cookieMap.set(c.name, c)
+  }
+  const sanitizedCookies = Array.from(cookieMap.values())
+
+  const isProd = process.env.NODE_ENV === 'production'
+
   return createServerClient(url, key, {
+    cookieOptions: {
+      domain: isProd ? '.producertoy.com' : undefined,
+      path: '/',
+      sameSite: 'lax',
+      secure: isProd,
+    },
     cookies: {
       getAll() {
         return sanitizedCookies
@@ -42,7 +69,7 @@ export const createClient = cache(async () => {
           cookiesToSet.forEach(({ name, value, options }) =>
             cookieStore.set(name, value, {
               ...options,
-              domain: process.env.NODE_ENV === 'production' ? '.producertoy.com' : options?.domain,
+              domain: isProd ? '.producertoy.com' : options?.domain,
             })
           )
         } catch {
@@ -65,7 +92,7 @@ export const getUser = cache(async () => {
 
     const supabase = await createClient()
     return await supabase.auth.getUser()
-  } catch (err) {
+  } catch (err: any) {
     console.warn('[SERVER_AUTH_GETUSER_ERROR]', err)
     return { data: { user: null }, error: err }
   }

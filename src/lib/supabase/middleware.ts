@@ -41,9 +41,19 @@ export async function updateSession(request: NextRequest) {
     const host = request.headers.get('host') || ''
     const isProdHost = host.includes('producertoy.com')
 
-    // 3. Cookie Sanitization: filter out corrupt or legacy cookies with dots/invalid chars
-    // to protect @supabase/ssr from crashing edge middleware execution.
-    const sanitizedCookies = rawCookies.filter((c) => {
+    // 3. Detect if chunked cookies exist (.0). If so, drop any unchunked stale cookie with same root name
+    const chunkedRoots = new Set(
+      rawCookies
+        .filter((c) => c.name.match(/^(.*)\.0$/))
+        .map((c) => c.name.replace(/\.0$/, ''))
+    )
+
+    // 4. Cookie Sanitization: filter out corrupt or legacy cookies with dots/invalid chars
+    const filtered = rawCookies.filter((c) => {
+      if (chunkedRoots.has(c.name)) {
+        return false
+      }
+
       if (
         (c.name.startsWith('sb-') || c.name.includes('-auth-token')) &&
         typeof c.value === 'string' &&
@@ -56,6 +66,13 @@ export async function updateSession(request: NextRequest) {
       }
       return true
     })
+
+    // 5. Deduplicate cookies with identical names (preferring latest set)
+    const cookieMap = new Map<string, (typeof rawCookies)[0]>()
+    for (const c of filtered) {
+      cookieMap.set(c.name, c)
+    }
+    const sanitizedCookies = Array.from(cookieMap.values())
 
     const hasValidSessionCookie = sanitizedCookies.some(
       (c) => c.name.startsWith('sb-') || c.name.includes('-auth-token')
@@ -73,6 +90,12 @@ export async function updateSession(request: NextRequest) {
     }
 
     const supabase = createServerClient(url, key, {
+      cookieOptions: {
+        domain: isProdHost ? '.producertoy.com' : undefined,
+        path: '/',
+        sameSite: 'lax',
+        secure: isProdHost,
+      },
       cookies: {
         getAll() {
           return sanitizedCookies

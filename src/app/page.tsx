@@ -36,9 +36,6 @@ export const revalidate = 0
 
 export default async function AdminDashboardPage() {
   const result = await getDashboardAnalyticsAction()
-  if (!result.success && result.error && result.error.toLowerCase().includes('unauthorized')) {
-    redirect('/login')
-  }
   const data = result.data
 
   const stats = data?.stats
@@ -55,6 +52,18 @@ export default async function AdminDashboardPage() {
         title="Executive Control Center"
         subtitle="Unified Command Mother-Ship for ProducerToy Storefront & Toy Creator Developer Portal"
       />
+
+      {result.error && (
+        <div className="mx-8 mt-6 p-4 rounded-xl bg-red-950/40 border border-red-500/50 text-red-200 text-sm flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="font-bold text-red-300">Session Notice:</span>
+            <span>{result.error}</span>
+          </div>
+          <a href="/login" className="px-3.5 py-1.5 bg-white text-black hover:bg-zinc-200 font-bold text-xs rounded-lg transition-colors">
+            Sign In Again
+          </a>
+        </div>
+      )}
 
       <main className="p-8 space-y-8 flex-1 max-w-7xl mx-auto w-full">
 
