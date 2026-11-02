@@ -20,7 +20,32 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
+    const isProd = process.env.NODE_ENV === 'production';
+    const cdnCacheHeaders = [
+      {
+        key: 'Cache-Control',
+        value: 'public, max-age=31536000, s-maxage=31536000, immutable',
+      },
+      {
+        key: 'CDN-Cache-Control',
+        value: 'public, max-age=31536000, immutable',
+      },
+      {
+        key: 'Vercel-CDN-Cache-Control',
+        value: 'public, max-age=31536000, immutable',
+      },
+    ];
+
     return [
+      ...(isProd
+        ? [
+            {
+              source: '/:path*.(ico|png|jpg|jpeg|gif|webp|avif|svg|woff|woff2|ttf|eot)',
+              headers: cdnCacheHeaders,
+            },
+
+          ]
+        : []),
       {
         source: '/(.*)',
         headers: [
